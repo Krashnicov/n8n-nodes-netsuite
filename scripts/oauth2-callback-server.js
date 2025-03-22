@@ -23,7 +23,9 @@ async function startOAuth2Server(options = {}) {
   }
 
   // Define the callback URL
-  const callbackUrl = `https://${ngrokDomain}/oauth/callback`;
+  // Ensure ngrokDomain doesn't already have https:// prefix
+  const domain = ngrokDomain.replace(/^https?:\/\//, '');
+  const callbackUrl = `https://${domain}/oauth/callback`;
   console.log(`OAuth2 callback URL: ${callbackUrl}`);
 
   // Route to handle OAuth callbacks

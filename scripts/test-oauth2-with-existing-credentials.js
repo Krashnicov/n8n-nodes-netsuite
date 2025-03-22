@@ -43,7 +43,8 @@ const config = {
   clientId: process.env.netsuite_consumerKey,
   clientSecret: process.env.netsuite_consumerSecret,
   accountId: process.env.netsuite_account_id,
-  ngrokDomain: process.env.ngrok_domain,
+  // Ensure ngrokDomain doesn't already have https:// prefix
+  ngrokDomain: process.env.ngrok_domain.replace(/^https?:\/\//, ''),
   accessTokenUri: `https://${process.env.netsuite_account_id}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token`,
   authUri: 'https://system.netsuite.com/app/login/oauth2/authorize.nl',
   scope: 'restwebservices',
