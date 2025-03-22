@@ -26,7 +26,7 @@ if (missingVars.length > 0) {
 
 // Configure NetSuite connection
 const config = {
-  netsuiteApiHost: process.env.netsuite_hostname,
+  netsuiteApiHost: `${process.env.netsuite_account_id}.${process.env.netsuite_hostname}`,
   consumerKey: process.env.netsuite_consumerKey,
   consumerSecret: process.env.netsuite_consumerSecret,
   netsuiteAccountId: process.env.netsuite_account_id,
