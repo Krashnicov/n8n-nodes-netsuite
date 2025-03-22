@@ -20,10 +20,12 @@ const ngrok = require('ngrok');
     }
 
     // Start ngrok tunnel on port 9999 with specific URL
+    // Using the format: ngrok http --url=domain port
+    const ngrokDomain = process.env.ngrok_domain || 'united-phoenix-subtle.ngrok-free.app';
     const url = await ngrok.connect({
       addr: 9999,
       proto: 'http',
-      hostname: 'united-phoenix-subtle.ngrok-free.app'
+      subdomain: ngrokDomain.split('.')[0] // Extract subdomain from the full domain
     });
     console.log('ngrok tunnel established at:', url);
     console.log('Press Ctrl+C to stop the tunnel');

@@ -125,7 +125,35 @@ Original error: ${message}`;
 	return { json: body };
 };
 
+import { OAuth2Helper } from './OAuth2Helper';
+
 const getConfig = (credentials: INetSuiteCredentials) => {
+	if (credentials.authentication === 'oauth2') {
+		// Return OAuth2 configuration
+		const oauth2Helper = new OAuth2Helper({
+			clientId: credentials.clientId as string,
+			clientSecret: credentials.clientSecret as string,
+			accessTokenUri: credentials.accessTokenUri as string,
+			authUri: credentials.authUri as string,
+			scope: credentials.scope as string,
+			accessToken: credentials.accessToken as string,
+			refreshToken: credentials.refreshToken as string,
+			accountId: credentials.accountId,
+		});
+		
+		// Return configuration for OAuth2
+		return {
+			netsuiteApiHost: `${credentials.accountId}.suitetalk.api.netsuite.com`,
+			oauth2Helper,
+			useOAuth2: true,
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'X-NetSuite-PropertyNameValidation': 'strict'
+			}
+		};
+	}
+
 	// Default hostname if not provided
 	const defaultHostname = 'suitetalk.api.netsuite.com';
 	const hostname = credentials.hostname || defaultHostname;
@@ -153,6 +181,7 @@ const getConfig = (credentials: INetSuiteCredentials) => {
 		netsuiteTokenKey: credentials.tokenKey,
 		netsuiteTokenSecret: credentials.tokenSecret,
 		netsuiteQueryLimit: 1000,
+		useOAuth2: false,
 		// Add required headers for NetSuite REST API
 		headers: {
 			'Accept': 'application/json',
