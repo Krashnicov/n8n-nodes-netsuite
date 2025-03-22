@@ -30,7 +30,7 @@ The workflow includes three operations:
 The following credentials were configured for the test:
 - Hostname: `${NETSUITE_API_HOSTNAME}` (configured from environment variable)
 - Account ID: `${NETSUITE_ACCOUNT_ID}` (configured from environment variable)
-- Consumer Key: `${N8N_API_KEY}` (configured from environment variable)
+- Consumer Key: `${consumerKey}` (configured from environment variable)
 - Consumer Secret: `${NETSUITE_CONSUMER_SECRET}` (configured from environment variable)
 - Token Key: `${NETSUITE_TOKEN_KEY}` (configured from environment variable)
 - Token Secret: `${NETSUITE_TOKEN_SECRET}` (configured from environment variable)
