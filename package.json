@@ -24,7 +24,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run build && npm run lint"
+    "prepublishOnly": "npm run build && npm run lint",
+    "postinstall": "patch-package"
   },
   "files": [
     "dist"
@@ -64,6 +65,8 @@
     "n8n": "^1.83.2",
     "n8n-workflow": "*",
     "nodemon": "^3.1.9",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "ts-jest": "^29.2.6",
     "typescript": "^5.5.3"
   },
