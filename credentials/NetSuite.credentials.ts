@@ -14,7 +14,7 @@ export class NetSuite implements ICredentialType {
 			type: 'string',
 			default: 'suitetalk.api.netsuite.com',
 			required: true,
-			description: 'NetSuite API hostname (e.g., suitetalk.api.netsuite.com) - do not include account ID prefix',
+			description: 'NetSuite API hostname (e.g., suitetalk.api.netsuite.com) - do not include protocol (https://) or account ID prefix',
 		},
 		{
 			displayName: 'Account ID',

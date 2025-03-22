@@ -28,6 +28,8 @@ import pLimit from 'p-limit';
 
 const debug = debuglog('n8n-nodes-netsuite');
 
+// We'll handle headers directly in the getConfig function instead
+
 const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteResponse) => {
 	// debug(response);
 	debug(`Netsuite response:`, response.statusCode, response.body);
@@ -90,17 +92,37 @@ const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteRespo
 	return { json: body };
 };
 
-const getConfig = (credentials: INetSuiteCredentials) => ({
-	netsuiteApiHost: credentials.hostname.includes(credentials.accountId) 
-		? credentials.hostname 
-		: `${credentials.accountId}.${credentials.hostname}`,
-	consumerKey: credentials.consumerKey,
-	consumerSecret: credentials.consumerSecret,
-	netsuiteAccountId: credentials.accountId,
-	netsuiteTokenKey: credentials.tokenKey,
-	netsuiteTokenSecret: credentials.tokenSecret,
-	netsuiteQueryLimit: 1000,
-});
+const getConfig = (credentials: INetSuiteCredentials) => {
+	// Remove any protocol prefix from hostname if present
+	const cleanHostname = credentials.hostname.replace(/^https?:\/\//, '');
+	
+	// Check if hostname already includes account ID
+	const netsuiteApiHost = cleanHostname.includes(credentials.accountId)
+		? cleanHostname
+		: `${credentials.accountId}.${cleanHostname}`;
+	
+	// Debug the configuration
+	debug('NetSuite config:', {
+		host: netsuiteApiHost,
+		accountId: credentials.accountId,
+	});
+	
+	return {
+		netsuiteApiHost,
+		consumerKey: credentials.consumerKey,
+		consumerSecret: credentials.consumerSecret,
+		netsuiteAccountId: credentials.accountId,
+		netsuiteTokenKey: credentials.tokenKey,
+		netsuiteTokenSecret: credentials.tokenSecret,
+		netsuiteQueryLimit: 1000,
+		// Add required headers for NetSuite REST API
+		headers: {
+			'Accept': 'application/json',
+			'Content-Type': 'application/json',
+			'X-NetSuite-PropertyNameValidation': 'strict'
+		}
+	};
+};
 
 export class NetSuite implements INodeType {
 	description: INodeTypeDescription = nodeDescription;
@@ -147,7 +169,9 @@ export class NetSuite implements INodeType {
 		nodeContext.offset = offset;
 		// debug('requestData', requestData);
 		while ((returnAll || returnData.length < limit) && hasMore === true) {
-			const response = await makeRequest(getConfig(credentials), requestData);
+			// Use the updated config with headers
+			const config = getConfig(credentials);
+			const response = await makeRequest(config, requestData);
 			const body: JsonObject = handleNetsuiteResponse(fns, response);
 			const { hasMore: doContinue, items, links, offset, count, totalResults } = (body.json as INetSuitePagedBody);
 			if (doContinue) {
@@ -208,6 +232,8 @@ export class NetSuite implements INodeType {
 		nodeContext.offset = offset;
 		debug('requestData', requestData);
 		while ((returnAll || returnData.length < limit) && hasMore === true) {
+			// Use the updated config with headers
+			const config = getConfig(credentials);
 			const response = await makeRequest(config, requestData);
 			const body: JsonObject = handleNetsuiteResponse(fns, response);
 			const { hasMore: doContinue, items, links, count, totalResults, offset } = (body.json as INetSuitePagedBody);
@@ -254,7 +280,9 @@ export class NetSuite implements INodeType {
 			requestType: NetSuiteRequestType.Record,
 			path: `services/rest/record/${apiVersion}/${recordType}/${internalId}${q ? `?${q}` : ''}`,
 		};
-		const response = await makeRequest(getConfig(credentials), requestData);
+			// Use the updated config with headers
+			const config = getConfig(credentials);
+			const response = await makeRequest(config, requestData);
 		if (item) response.body.orderNo = item.json.orderNo;
 		return handleNetsuiteResponse(fns, response);
 	}

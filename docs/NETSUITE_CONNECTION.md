@@ -8,12 +8,12 @@ To connect to NetSuite, you need to set the following environment variables:
 
 | Variable | Description |
 |----------|-------------|
-| `netsuite_hostname` | Your NetSuite API hostname (e.g., `suitetalk.api.netsuite.com`) - DO NOT include the account_id prefix |
-| `netsuite_account_id` | Your NetSuite account ID |
-| `netsuite_consumerKey` | Your OAuth 1.0 consumer key |
-| `netsuite_consumerSecret` | Your OAuth 1.0 consumer secret |
-| `netsuite_tokenKey` | Your OAuth 1.0 token key |
-| `netsuite_tokenSecret` | Your OAuth 1.0 token secret |
+| `netsuite_hostname` | Your NetSuite API hostname (e.g., `suitetalk.api.netsuite.com`) - DO NOT include the account_id prefix or protocol (https://) |
+| `netsuite_account_id` | Your NetSuite account ID (e.g., `td2950894`) |
+| `netsuite_consumerKey` | Your OAuth 1.0 consumer key (for an integration created in NetSuite with appropriate permissions) |
+| `netsuite_consumerSecret` | Your OAuth 1.0 consumer secret (paired with the consumer key) |
+| `netsuite_tokenKey` | Your OAuth 1.0 token key (must have sufficient permissions in NetSuite) |
+| `netsuite_tokenSecret` | Your OAuth 1.0 token secret (paired with the token key) |
 
 ## Method 1: Using the Test Script
 
