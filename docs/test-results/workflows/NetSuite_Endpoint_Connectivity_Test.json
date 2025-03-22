@@ -1,0 +1,148 @@
+{
+  "name": "NetSuite Endpoint Connectivity Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getRecord",
+        "recordType": "customer",
+        "internalId": "12345",
+        "version": "v1",
+        "expandSubResources": true,
+        "simpleEnumFormat": false
+      },
+      "name": "NetSuite - Get Record",
+      "type": "n8n-nodes-netsuite.netsuite",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "netsuite": {
+          "id": "1",
+          "name": "NetSuite Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "listRecords",
+        "recordType": "customer",
+        "version": "v1",
+        "returnAll": false,
+        "limit": 10,
+        "offset": 0
+      },
+      "name": "NetSuite - List Records",
+      "type": "n8n-nodes-netsuite.netsuite",
+      "typeVersion": 1,
+      "position": [
+        450,
+        450
+      ],
+      "credentials": {
+        "netsuite": {
+          "id": "1",
+          "name": "NetSuite Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "runSuiteQL",
+        "version": "v1",
+        "query": "SELECT id, companyName FROM customer LIMIT 5",
+        "returnAll": false,
+        "limit": 100,
+        "offset": 0
+      },
+      "name": "NetSuite - Run SuiteQL",
+      "type": "n8n-nodes-netsuite.netsuite",
+      "typeVersion": 1,
+      "position": [
+        450,
+        600
+      ],
+      "credentials": {
+        "netsuite": {
+          "id": "1",
+          "name": "NetSuite Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getRecord",
+        "recordType": "customer",
+        "internalId": "999999999",
+        "version": "v1",
+        "expandSubResources": false,
+        "simpleEnumFormat": false
+      },
+      "name": "NetSuite - Error Test",
+      "type": "n8n-nodes-netsuite.netsuite",
+      "typeVersion": 1,
+      "position": [
+        450,
+        750
+      ],
+      "credentials": {
+        "netsuite": {
+          "id": "1",
+          "name": "NetSuite Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "NetSuite - Get Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NetSuite - List Records",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NetSuite - Run SuiteQL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NetSuite - Error Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1",
+  "id": "1",
+  "meta": {
+    "instanceId": "1"
+  },
+  "tags": [
+    {
+      "name": "testing",
+      "color": "#00ccff"
+    }
+  ]
+}
