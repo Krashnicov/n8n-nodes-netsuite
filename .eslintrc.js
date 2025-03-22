@@ -19,7 +19,7 @@ module.exports = {
 		extraFileExtensions: ['.json'],
 	},
 
-	ignorePatterns: ['.eslintrc.js', '**/*.js', '**/node_modules/**', '**/dist/**', '**/__tests__/**'],
+	ignorePatterns: ['.eslintrc.js', '**/*.js', '**/node_modules/**', '**/dist/**'],
 
 	overrides: [
 		{
@@ -29,6 +29,16 @@ module.exports = {
 		},
 		{
 			files: ['credentials/**/*.ts', 'nodes/**/*.ts']
+		},
+		{
+			files: ['**/__tests__/**/*.ts'],
+			env: {
+				jest: true,
+				node: true
+			},
+			rules: {
+				'no-undef': 'off'
+			}
 		},
 	],
 };
