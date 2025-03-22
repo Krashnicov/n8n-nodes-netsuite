@@ -6,12 +6,14 @@ Before running these tests, ensure you have:
 1. REST Web Services feature enabled in your NetSuite account
 2. OAuth 1.0 authentication credentials properly configured
 3. The following environment variables set:
-   - `netsuite_hostname`: Your NetSuite API hostname
+   - `netsuite_hostname`: Your NetSuite API hostname (e.g., `1234567.suitetalk.api.netsuite.com`)
    - `netsuite_account_id`: Your NetSuite account ID
    - `netsuite_consumerKey`: OAuth consumer key
    - `netsuite_consumerSecret`: OAuth consumer secret
    - `netsuite_tokenKey`: OAuth token key
    - `netsuite_tokenSecret`: OAuth token secret
+
+> **Important Note:** The `hostname` and `account_id` are separate parameters in the NetSuite node. While the hostname typically includes an account identifier in its format (`[account-id].suitetalk.api.netsuite.com`), this is different from the `account_id` parameter, which is used separately in the API authentication.
 
 See [USER_GUIDE.md](../USER_GUIDE.md) for more information on setting up NetSuite credentials.
 
@@ -45,14 +47,28 @@ The workflow includes three operations:
 The following credentials were configured for the test:
 - Hostname: `${netsuite_hostname}` (configured from environment variable)
   - Format: `[account-id].suitetalk.api.netsuite.com` as documented in [API_DOCS.md](../API_DOCS.md)
+  - Note: The number in the hostname is a NetSuite subdomain identifier, which may be related to but is different from the Account ID parameter below
 - Account ID: `${netsuite_account_id}` (configured from environment variable)
-  - Your NetSuite account ID
+  - Your NetSuite account ID used for OAuth authentication
 - Consumer Key: `${netsuite_consumerKey}` (configured from environment variable)
 - Consumer Secret: `${netsuite_consumerSecret}` (configured from environment variable)
 - Token Key: `${netsuite_tokenKey}` (configured from environment variable)
 - Token Secret: `${netsuite_tokenSecret}` (configured from environment variable)
 
 For detailed information on obtaining these credentials, refer to [CONFIGURATION.md](../CONFIGURATION.md).
+
+## How Credentials Are Used
+The NetSuite node handles hostname and account ID as separate parameters:
+
+1. **Hostname** (`netsuite_hostname`): Used as the base URL for API requests
+   - Passed to the API as `netsuiteApiHost`
+   - Contains the NetSuite subdomain where your account is hosted
+
+2. **Account ID** (`netsuite_account_id`): Used in OAuth authentication
+   - Passed to the API as `netsuiteAccountId`
+   - Identifies your specific NetSuite account during authentication
+
+These parameters are not concatenated in the code; they are used separately in the API configuration.
 
 ## Test Workflow Configuration
 ### Get Record Node
