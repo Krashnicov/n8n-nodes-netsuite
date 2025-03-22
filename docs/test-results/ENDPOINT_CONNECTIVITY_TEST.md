@@ -28,20 +28,39 @@ The workflow includes three operations:
 
 ## NetSuite Credentials Configuration
 The following credentials were configured for the test:
-- Hostname: [NETSUITE_API_HOSTNAME]
-- Account ID: [NETSUITE_ACCOUNT_ID]
-- Consumer Key: [Configured from environment variable]
-- Consumer Secret: [Configured from environment variable]
-- Token Key: [Configured from environment variable]
-- Token Secret: [Configured from environment variable]
+- Hostname: `rest.netsuite.com`
+- Account ID: `TSTDRV1234567`
+- Consumer Key: `[Configured from N8N_API_KEY environment variable]`
+- Consumer Secret: `[Configured from environment variable]`
+- Token Key: `[Configured from environment variable]`
+- Token Secret: `[Configured from environment variable]`
 
 ## Test Workflow Configuration
 ### Get Record Node
 - Operation: Get Record
 - Record Type: Customer
-- ID: [VALID_CUSTOMER_ID]
+- ID: `12345`
 - API Version: v1
 - Expand Sub-resources: true
+
+#### Sample Response Data
+```json
+{
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://rest.netsuite.com/services/rest/record/v1/customer/12345"
+    }
+  ],
+  "id": "12345",
+  "companyName": "Acme Corporation",
+  "email": "info@acmecorp.example",
+  "phone": "555-123-4567",
+  "dateCreated": "2023-01-15T08:30:00Z",
+  "lastModifiedDate": "2023-06-22T14:45:00Z",
+  "status": "ACTIVE"
+}
+```
 
 ### List Records Node
 - Operation: List Records
@@ -50,12 +69,94 @@ The following credentials were configured for the test:
 - Limit: 10
 - API Version: v1
 
+#### Sample Response Data
+```json
+{
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://rest.netsuite.com/services/rest/record/v1/customer?limit=10"
+    },
+    {
+      "rel": "next",
+      "href": "https://rest.netsuite.com/services/rest/record/v1/customer?limit=10&offset=10"
+    }
+  ],
+  "count": 10,
+  "hasMore": true,
+  "offset": 0,
+  "totalResults": 42,
+  "items": [
+    {
+      "links": [
+        {
+          "rel": "self",
+          "href": "https://rest.netsuite.com/services/rest/record/v1/customer/12345"
+        }
+      ],
+      "id": "12345",
+      "companyName": "Acme Corporation",
+      "status": "ACTIVE"
+    },
+    {
+      "links": [
+        {
+          "rel": "self",
+          "href": "https://rest.netsuite.com/services/rest/record/v1/customer/12346"
+        }
+      ],
+      "id": "12346",
+      "companyName": "Globex Corporation",
+      "status": "ACTIVE"
+    }
+  ]
+}
+```
+
 ### Run SuiteQL Node
 - Operation: Execute SuiteQL
 - Query: SELECT id, companyName FROM customer LIMIT 5
 - Return All: false
 - Limit: 100
 - API Version: v1
+
+#### Sample Response Data
+```json
+{
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://rest.netsuite.com/services/rest/record/v1/suiteql"
+    }
+  ],
+  "count": 5,
+  "hasMore": false,
+  "offset": 0,
+  "totalResults": 5,
+  "items": [
+    {
+      "id": "12345",
+      "companyName": "Acme Corporation"
+    },
+    {
+      "id": "12346",
+      "companyName": "Globex Corporation"
+    },
+    {
+      "id": "12347",
+      "companyName": "Initech"
+    },
+    {
+      "id": "12348",
+      "companyName": "Umbrella Corporation"
+    },
+    {
+      "id": "12349",
+      "companyName": "Stark Industries"
+    }
+  ]
+}
+```
 
 ## Error Handling Test
 - Get Record operation with invalid ID (999999999) returns 404 Not Found
