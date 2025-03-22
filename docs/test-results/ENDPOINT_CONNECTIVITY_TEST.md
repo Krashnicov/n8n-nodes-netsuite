@@ -1,5 +1,20 @@
 # NetSuite Endpoint Connectivity Test Results
 
+## Credential Requirements
+Before running these tests, ensure you have:
+
+1. REST Web Services feature enabled in your NetSuite account
+2. OAuth 1.0 authentication credentials properly configured
+3. The following environment variables set:
+   - `netsuite_hostname`: Your NetSuite API hostname
+   - `netsuite_account_id`: Your NetSuite account ID
+   - `netsuite_consumerKey`: OAuth consumer key
+   - `netsuite_consumerSecret`: OAuth consumer secret
+   - `netsuite_tokenKey`: OAuth token key
+   - `netsuite_tokenSecret`: OAuth token secret
+
+See [USER_GUIDE.md](../USER_GUIDE.md) for more information on setting up NetSuite credentials.
+
 ## Test Environment
 - Date: March 22, 2025
 - n8n Version: 1.83.2
@@ -29,11 +44,15 @@ The workflow includes three operations:
 ## NetSuite Credentials Configuration
 The following credentials were configured for the test:
 - Hostname: `${netsuite_hostname}` (configured from environment variable)
+  - Format: `[account-id].suitetalk.api.netsuite.com` as documented in [API_DOCS.md](../API_DOCS.md)
 - Account ID: `${netsuite_account_id}` (configured from environment variable)
+  - Your NetSuite account ID
 - Consumer Key: `${netsuite_consumerKey}` (configured from environment variable)
 - Consumer Secret: `${netsuite_consumerSecret}` (configured from environment variable)
 - Token Key: `${netsuite_tokenKey}` (configured from environment variable)
 - Token Secret: `${netsuite_tokenSecret}` (configured from environment variable)
+
+For detailed information on obtaining these credentials, refer to [CONFIGURATION.md](../CONFIGURATION.md).
 
 ## Test Workflow Configuration
 ### Get Record Node
