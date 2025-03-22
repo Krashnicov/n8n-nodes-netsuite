@@ -19,8 +19,12 @@ const ngrok = require('ngrok');
       throw authError;
     }
 
-    // Start ngrok tunnel on port 9999
-    const url = await ngrok.connect(9999);
+    // Start ngrok tunnel on port 9999 with specific URL
+    const url = await ngrok.connect({
+      addr: 9999,
+      proto: 'http',
+      hostname: 'united-phoenix-subtle.ngrok-free.app'
+    });
     console.log('ngrok tunnel established at:', url);
     console.log('Press Ctrl+C to stop the tunnel');
   } catch (error) {
