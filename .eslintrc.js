@@ -1,5 +1,6 @@
 /**
  * @type {import('@types/eslint').ESLint.ConfigData}
+ * @note Using legacy .eslintrc.js format with ESLint 9.x (requires ESLINT_USE_FLAT_CONFIG=false)
  */
 module.exports = {
 	root: true,
