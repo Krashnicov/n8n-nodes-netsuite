@@ -20,8 +20,12 @@ const ngrok = require('ngrok');
     }
 
     // Start ngrok tunnel on port 9999 with specific URL
-    // Using the format: ngrok http port --url=domain
-    const ngrokDomain = process.env.ngrok_domain || 'united-phoenix-subtle.ngrok-free.app';
+    // Using the format: ngrok http --url=domain port
+    let ngrokDomain = process.env.ngrok_domain || 'united-phoenix-subtle.ngrok-free.app';
+    // Remove https:// or http:// prefix if present
+    ngrokDomain = ngrokDomain.replace(/^https?:\/\//, '');
+    
+    console.log(`Starting ngrok tunnel on port 9999 with domain: ${ngrokDomain}`);
     
     // Use the ngrok CLI command format through the API
     // This simulates: ngrok http 9999 --url=united-phoenix-subtle.ngrok-free.app
