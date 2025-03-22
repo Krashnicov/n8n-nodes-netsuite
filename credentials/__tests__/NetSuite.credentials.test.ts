@@ -21,5 +21,41 @@ describe('NetSuite Credentials', () => {
     expect(hostnameProperty?.required).toBe(true);
   });
   
-  // More credential property tests would be implemented here
+  it('should require accountId', () => {
+    const accountIdProperty = netSuiteCredentials.properties.find(prop => prop.name === 'accountId');
+    expect(accountIdProperty).toBeDefined();
+    expect(accountIdProperty?.required).toBe(true);
+  });
+  
+  it('should require consumerKey', () => {
+    const consumerKeyProperty = netSuiteCredentials.properties.find(prop => prop.name === 'consumerKey');
+    expect(consumerKeyProperty).toBeDefined();
+    expect(consumerKeyProperty?.required).toBe(true);
+  });
+  
+  it('should require consumerSecret', () => {
+    const consumerSecretProperty = netSuiteCredentials.properties.find(prop => prop.name === 'consumerSecret');
+    expect(consumerSecretProperty).toBeDefined();
+    expect(consumerSecretProperty?.required).toBe(true);
+    expect(consumerSecretProperty?.typeOptions?.password).toBe(true);
+  });
+  
+  it('should require tokenKey', () => {
+    const tokenKeyProperty = netSuiteCredentials.properties.find(prop => prop.name === 'tokenKey');
+    expect(tokenKeyProperty).toBeDefined();
+    expect(tokenKeyProperty?.required).toBe(true);
+  });
+  
+  it('should require tokenSecret', () => {
+    const tokenSecretProperty = netSuiteCredentials.properties.find(prop => prop.name === 'tokenSecret');
+    expect(tokenSecretProperty).toBeDefined();
+    expect(tokenSecretProperty?.required).toBe(true);
+    expect(tokenSecretProperty?.typeOptions?.password).toBe(true);
+  });
+  
+  it('should have documentation URL', () => {
+    expect(netSuiteCredentials.documentationUrl).toBeDefined();
+    expect(typeof netSuiteCredentials.documentationUrl).toBe('string');
+    expect(netSuiteCredentials.documentationUrl.length).toBeGreaterThan(0);
+  });
 });
