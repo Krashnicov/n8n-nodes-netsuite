@@ -15,8 +15,8 @@ importers:
         specifier: ^2.3.1
         version: 2.3.1
       p-limit:
-        specifier: ^6.2.0
-        version: 6.2.0
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.1
@@ -56,7 +56,7 @@ importers:
         version: 2.4.0
       n8n:
         specifier: ^1.83.2
-        version: 1.83.2(985218c4b4a4e47215ef2a978b7c7d3d)
+        version: 1.83.2(gchz7pxpmplk3yaikgs2bof3ci)
       n8n-workflow:
         specifier: '*'
         version: 1.82.0
@@ -5925,10 +5925,6 @@ packages:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
     engines: {node: '>=10'}
 
-  p-limit@6.2.0:
-    resolution: {integrity: sha512-kuUqqHNUqoIWp/c467RI4X6mmyuojY5jGutNU0wVTmEOOfcuwLqyMVoAi9MKi2Ak+5i9+nhmrK4ufZE8069kHA==}
-    engines: {node: '>=18'}
-
   p-locate@4.1.0:
     resolution: {integrity: sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==}
     engines: {node: '>=8'}
@@ -7582,10 +7578,6 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  yocto-queue@1.2.1:
-    resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
-    engines: {node: '>=12.20'}
-
   yup@0.32.11:
     resolution: {integrity: sha512-Z2Fe1bn+eLstG8DRR6FTavGD+MeAwyfmouhHsIUgaADz8jvFKbO/fXc2trJKZg+5EBjh4gGm3iU/t3onKlXHIg==}
     engines: {node: '>=10'}
@@ -9227,7 +9219,7 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7po3gpi4u4dsfqcsluihoykmny))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -9236,7 +9228,7 @@ snapshots:
       zod: 3.24.1
     optionalDependencies:
       '@langchain/core': 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
-      langchain: 0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c)
+      langchain: 0.3.11(7po3gpi4u4dsfqcsluihoykmny)
     transitivePeerDependencies:
       - encoding
 
@@ -9603,7 +9595,7 @@ snapshots:
       - aws-crt
       - encoding
 
-  '@langchain/community@0.3.24(1519d2cf53c21343c559c289ef1e8d68)':
+  '@langchain/community@0.3.24(xpufkjjnjttpwbmu5ligmif4x4)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.4.7)(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))(zod@3.24.1)
       '@ibm-cloud/watsonx-ai': 1.6.0(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))
@@ -9614,7 +9606,7 @@ snapshots:
       flat: 5.0.2
       ibm-cloud-sdk-core: 5.3.2
       js-yaml: 4.1.0
-      langchain: 0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c)
+      langchain: 0.3.11(7po3gpi4u4dsfqcsluihoykmny)
       langsmith: 0.2.15(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       openai: 4.78.1(encoding@0.1.13)(zod@3.24.1)
       uuid: 10.0.0
@@ -9629,7 +9621,7 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.772.0
       '@azure/storage-blob': 12.18.0(encoding@0.1.13)
       '@browserbasehq/sdk': 2.4.0(encoding@0.1.13)
-      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c))
+      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7po3gpi4u4dsfqcsluihoykmny))
       '@getzep/zep-js': 0.9.0
       '@google-ai/generativelanguage': 2.6.0(encoding@0.1.13)
       '@google-cloud/storage': 7.15.2(encoding@0.1.13)
@@ -9856,10 +9848,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@n8n/n8n-nodes-langchain@1.83.1(637ff51b8bbc0652f72a7f0aa6176dc4)':
+  '@n8n/n8n-nodes-langchain@1.83.1(sbonjrvr6agls33ugirggmglxa)':
     dependencies:
       '@aws-sdk/client-sso-oidc': 3.666.0(@aws-sdk/client-sts@3.772.0)
-      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c))
+      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7po3gpi4u4dsfqcsluihoykmny))
       '@getzep/zep-js': 0.9.0
       '@google-ai/generativelanguage': 2.6.0(encoding@0.1.13)
       '@google-cloud/resource-manager': 5.3.0(encoding@0.1.13)
@@ -9868,7 +9860,7 @@ snapshots:
       '@langchain/anthropic': 0.3.14(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
       '@langchain/aws': 0.1.3(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))
       '@langchain/cohere': 0.3.2(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
-      '@langchain/community': 0.3.24(1519d2cf53c21343c559c289ef1e8d68)
+      '@langchain/community': 0.3.24(xpufkjjnjttpwbmu5ligmif4x4)
       '@langchain/core': 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       '@langchain/google-genai': 0.1.6(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(zod@3.24.1)
       '@langchain/google-vertexai': 0.1.8(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(zod@3.24.1)
@@ -9898,7 +9890,7 @@ snapshots:
       generate-schema: 2.6.0
       html-to-text: 9.0.5
       jsdom: 23.0.1
-      langchain: 0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c)
+      langchain: 0.3.11(7po3gpi4u4dsfqcsluihoykmny)
       lodash: 4.17.21
       mammoth: 1.7.2
       mime-types: 2.1.35
@@ -14843,7 +14835,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.11(26fc25d9eb470c7ca3429dfeb5465d4c):
+  langchain@0.3.11(7po3gpi4u4dsfqcsluihoykmny):
     dependencies:
       '@langchain/core': 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       '@langchain/openai': 0.3.17(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
@@ -15526,7 +15518,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  n8n@1.83.2(985218c4b4a4e47215ef2a978b7c7d3d):
+  n8n@1.83.2(gchz7pxpmplk3yaikgs2bof3ci):
     dependencies:
       '@azure/identity': 4.8.0
       '@azure/keyvault-secrets': 4.9.0
@@ -15536,7 +15528,7 @@ snapshots:
       '@n8n/config': 1.32.0
       '@n8n/di': 0.4.0
       '@n8n/localtunnel': 3.0.0
-      '@n8n/n8n-nodes-langchain': 1.83.1(637ff51b8bbc0652f72a7f0aa6176dc4)
+      '@n8n/n8n-nodes-langchain': 1.83.1(sbonjrvr6agls33ugirggmglxa)
       '@n8n/permissions': 0.19.0
       '@n8n/task-runner': 1.20.2(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       '@n8n/typeorm': 0.3.20-12(@sentry/node@8.52.1)(ioredis@5.3.2)(mssql@10.0.2)(mysql2@3.11.0)(pg@8.12.0)(redis@4.6.12)(sqlite3@5.1.7)
@@ -16048,10 +16040,6 @@ snapshots:
   p-limit@3.1.0:
     dependencies:
       yocto-queue: 0.1.0
-
-  p-limit@6.2.0:
-    dependencies:
-      yocto-queue: 1.2.1
 
   p-locate@4.1.0:
     dependencies:
@@ -17895,8 +17883,6 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
-
-  yocto-queue@1.2.1: {}
 
   yup@0.32.11:
     dependencies:
