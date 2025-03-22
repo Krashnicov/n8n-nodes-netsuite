@@ -19,8 +19,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc && gulp",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint nodes credentials package.json",
+    "lintfix": "ESLINT_USE_FLAT_CONFIG=false eslint nodes credentials package.json --fix",
     "prepublishOnly": "npm run build && npm run lint"
   },
   "files": [
@@ -46,9 +46,9 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "^18.19.39",
-    "@typescript-eslint/parser": "^7.16.0",
-    "eslint": "^8.57.0",
+    "@types/node": "^22.13.11",
+    "@typescript-eslint/parser": "^8.27.0",
+    "eslint": "^9.23.0",
     "gulp": "^5.0.0",
     "n8n-workflow": "*",
     "typescript": "^5.5.3"
@@ -58,6 +58,6 @@
   },
   "dependencies": {
     "@fye/netsuite-rest-api": "^2.3.1",
-    "p-limit": "^3.1.0"
+    "p-limit": "^6.2.0"
   }
 }
