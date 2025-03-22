@@ -44,6 +44,13 @@ const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteRespo
 		if (webDetails && webDetails.length > 0) {
 			message = webDetails[0].detail || message;
 		}
+		
+		// Add specific handling for 401 Unauthorized errors
+		if (response.statusCode === 401) {
+			message = `Authentication failed (401 Unauthorized): Please verify your NetSuite credentials, especially the hostname format, account ID, and OAuth tokens. ${message}`;
+			debug('NetSuite authentication failed:', message);
+		}
+		
 		if (fns.continueOnFail() !== true) {
 			// const code = webCode || restletCode;
 			const error = new NodeApiError(fns.getNode(), response.body);
@@ -84,7 +91,9 @@ const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteRespo
 };
 
 const getConfig = (credentials: INetSuiteCredentials) => ({
-	netsuiteApiHost: credentials.hostname,
+	netsuiteApiHost: credentials.hostname.includes(credentials.accountId) 
+		? credentials.hostname 
+		: `${credentials.accountId}.${credentials.hostname}`,
 	consumerKey: credentials.consumerKey,
 	consumerSecret: credentials.consumerSecret,
 	netsuiteAccountId: credentials.accountId,

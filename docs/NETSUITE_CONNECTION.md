@@ -8,7 +8,7 @@ To connect to NetSuite, you need to set the following environment variables:
 
 | Variable | Description |
 |----------|-------------|
-| `netsuite_hostname` | Your NetSuite API hostname (e.g., `your-account-id.suitetalk.api.netsuite.com`) |
+| `netsuite_hostname` | Your NetSuite API hostname (e.g., `suitetalk.api.netsuite.com`) - DO NOT include the account_id prefix |
 | `netsuite_account_id` | Your NetSuite account ID |
 | `netsuite_consumerKey` | Your OAuth 1.0 consumer key |
 | `netsuite_consumerSecret` | Your OAuth 1.0 consumer secret |
@@ -21,7 +21,7 @@ Run the connection test script:
 
 ```bash
 # Export your environment variables
-export netsuite_hostname="your-account-id.suitetalk.api.netsuite.com"
+export netsuite_hostname="suitetalk.api.netsuite.com"  # DO NOT include account_id prefix
 export netsuite_account_id="your-account-id"
 export netsuite_consumerKey="your-consumer-key"
 export netsuite_consumerSecret="your-consumer-secret"
