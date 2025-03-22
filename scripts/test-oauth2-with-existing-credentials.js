@@ -53,7 +53,7 @@ const config = {
 console.log('🔑 Testing OAuth2 authentication with NetSuite using existing credentials');
 console.log('------------------------------------------------------------------------');
 console.log('Configuration:');
-console.log(`- Client ID (from consumerKey): ${config.clientId.substring(0, 5)}...`);
+console.log(`- Client ID (from consumerKey): ${config.clientId}`);
 console.log(`- Account ID: ${config.accountId}`);
 console.log(`- Ngrok Domain: ${config.ngrokDomain}`);
 console.log(`- Token URI: ${config.accessTokenUri}`);
