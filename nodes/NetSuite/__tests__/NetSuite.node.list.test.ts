@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* eslint-env jest, node */
 import { NetSuite } from '../NetSuite.node';
 import { mockExecuteFunctions, mockOperationOptions } from './helpers/testHelpers';
 import * as makeRequestModule from '@fye/netsuite-rest-api';

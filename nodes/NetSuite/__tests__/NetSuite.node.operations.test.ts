@@ -1,4 +1,4 @@
-/* eslint-env jest */
+/* eslint-env jest, node */
 import { NetSuite } from '../NetSuite.node';
 import { mockExecuteFunctions, mockOperationOptions } from './helpers/testHelpers';
 import * as makeRequestModule from '@fye/netsuite-rest-api';
@@ -228,6 +228,96 @@ describe('NetSuite Node Operations', () => {
       
       expect(result).toHaveProperty('json');
       expect(result.json).toHaveProperty('success', true);
+    });
+  });
+  
+  describe('listRecords', () => {
+    it('should construct correct endpoint URL for listRecords operation', async () => {
+      const fns = mockExecuteFunctions();
+      fns.getNodeParameter = jest.fn()
+        .mockReturnValueOnce('2021.2') // version
+        .mockReturnValueOnce('customer') // recordType
+        .mockReturnValueOnce(false) // returnAll
+        .mockReturnValueOnce('') // query
+        .mockReturnValueOnce(50) // limit
+        .mockReturnValueOnce(0); // offset
+      
+      const mockResponse = {
+        statusCode: 200,
+        statusText: 'OK',
+        headers: {},
+        body: { 
+          statusCode: 200,
+          body: {
+            items: [],
+            hasMore: false,
+            count: 0,
+            offset: 0,
+            totalResults: 0,
+            links: []
+          }
+        },
+        request: { options: { method: 'GET' } },
+      };
+      
+      (makeRequestModule.makeRequest as jest.Mock).mockResolvedValueOnce(mockResponse);
+      
+      const options = mockOperationOptions({ fns });
+      await NetSuite.listRecords(options);
+      
+      // Verify the endpoint URL construction
+      expect(makeRequestModule.makeRequest).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          method: 'GET',
+          path: expect.stringContaining('services/rest/record/2021.2/customer?limit=50&offset=0'),
+        })
+      );
+    });
+  });
+  
+  describe('runSuiteQL', () => {
+    it('should construct correct endpoint URL for runSuiteQL operation', async () => {
+      const fns = mockExecuteFunctions();
+      fns.getNodeParameter = jest.fn()
+        .mockReturnValueOnce('2021.2') // version
+        .mockReturnValueOnce(false) // returnAll
+        .mockReturnValueOnce('SELECT * FROM customer WHERE id = 123') // query
+        .mockReturnValueOnce(100) // limit
+        .mockReturnValueOnce(0); // offset
+      
+      const mockResponse = {
+        statusCode: 200,
+        statusText: 'OK',
+        headers: {},
+        body: { 
+          statusCode: 200,
+          body: {
+            items: [],
+            hasMore: false,
+            count: 0,
+            offset: 0,
+            totalResults: 0,
+            links: []
+          }
+        },
+        request: { options: { method: 'POST' } },
+      };
+      
+      (makeRequestModule.makeRequest as jest.Mock).mockResolvedValueOnce(mockResponse);
+      
+      const options = mockOperationOptions({ fns });
+      await NetSuite.runSuiteQL(options);
+      
+      // Verify the endpoint URL construction
+      expect(makeRequestModule.makeRequest).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          method: 'POST',
+          path: expect.stringContaining('services/rest/query/2021.2/suiteql?'),
+          query: 'SELECT * FROM customer WHERE id = 123',
+        })
+      );
     });
   });
   
