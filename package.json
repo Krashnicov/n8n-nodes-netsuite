@@ -25,6 +25,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:connection": "node scripts/test-netsuite-connection.js",
+    "tunnel": "node scripts/start-ngrok.js",
     "prepublishOnly": "npm run build && npm run lint",
     "postinstall": "patch-package"
   },
@@ -65,6 +66,7 @@
     "jsonc-eslint-parser": "^2.4.0",
     "n8n": "^1.83.2",
     "n8n-workflow": "*",
+    "ngrok": "5.0.0-beta.2",
     "nodemon": "^3.1.9",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
