@@ -18,7 +18,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "nodemon -w nodes -w credentials --ext ts --exec 'tsc'",
     "build": "tsc && gulp",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
@@ -54,6 +54,7 @@
     "eslint": "^9.23.0",
     "gulp": "^5.0.0",
     "n8n-workflow": "*",
+    "nodemon": "^3.1.9",
     "typescript": "^5.5.3"
   },
   "peerDependencies": {
