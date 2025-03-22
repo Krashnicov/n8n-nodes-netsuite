@@ -124,6 +124,22 @@ describe('OAuth2Helper', () => {
     };
     
     const mockResponse = {
+      status: 200,
+      data: { success: true },
+    };
+    
+    const result = oauth2Helper.handleNetsuiteResponse(mockExecuteFunctions as any, mockResponse as any);
+    
+    expect(result).toEqual({ json: { success: true } });
+  });
+
+  it('should handle NetSuite API response for successful requests with statusCode', () => {
+    const mockExecuteFunctions = {
+      getNode: jest.fn().mockReturnValue({ name: 'NetSuite' }),
+      continueOnFail: jest.fn().mockReturnValue(false),
+    };
+    
+    const mockResponse = {
       statusCode: 200,
       body: { success: true },
     };
@@ -140,8 +156,8 @@ describe('OAuth2Helper', () => {
     };
     
     const mockResponse = {
-      statusCode: 400,
-      body: { error: 'Bad Request' },
+      status: 400,
+      data: { error: 'Bad Request' },
     };
     
     const result = oauth2Helper.handleNetsuiteResponse(mockExecuteFunctions as any, mockResponse as any);

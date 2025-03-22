@@ -14,9 +14,13 @@ describe('NetSuite Node', () => {
     
     // Mock execute functions
     mockExecuteFunctions = {
-      getNodeParameter: jest.fn((param) => {
+      getNodeParameter: jest.fn((param, itemIndex, fallback) => {
+        if (param === 'resource') return 'record';
+        if (param === 'operation') return 'get';
+        if (param === 'recordType') return 'customer';
+        if (param === 'recordId') return '123';
         if (param === 'options') return { concurrency: 1 };
-        return undefined;
+        return fallback;
       }),
       getInputData: jest.fn().mockReturnValue([{ json: {} }]),
       getCredentials: jest.fn(),
@@ -26,6 +30,16 @@ describe('NetSuite Node', () => {
       continueOnFail: jest.fn().mockReturnValue(false),
       getNode: jest.fn().mockReturnValue({ name: 'NetSuite' }),
     } as unknown as IExecuteFunctions;
+    
+    // Ensure options.concurrency is properly mocked
+    (mockExecuteFunctions.getNodeParameter as jest.Mock).mockImplementation((param, itemIndex, fallback) => {
+      if (param === 'resource') return 'record';
+      if (param === 'operation') return 'get';
+      if (param === 'recordType') return 'customer';
+      if (param === 'recordId') return '123';
+      if (param === 'options') return { concurrency: 1 };
+      return fallback || {};
+    });
   });
 
   afterEach(() => {

@@ -449,8 +449,8 @@ export class NetSuite implements INodeType {
 		const items: INodeExecutionData[] = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
 		const promises = [];
-		const options = this.getNodeParameter('options', 0) as IDataObject;
-		const concurrency = options.concurrency as number || 1;
+		const options = this.getNodeParameter('options', 0, {}) as IDataObject;
+		const concurrency = options && typeof options.concurrency === 'number' ? options.concurrency : 1;
 		const limit = pLimit(concurrency);
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {

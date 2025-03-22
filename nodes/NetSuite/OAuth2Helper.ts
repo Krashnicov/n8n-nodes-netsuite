@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
-import { IExecuteFunctions, NodeApiError } from 'n8n-workflow';
+import { IExecuteFunctions } from 'n8n-workflow';
 import { debuglog } from 'util';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -103,22 +103,27 @@ export class OAuth2Helper {
    * Handle NetSuite API response for n8n node execution
    */
   handleNetsuiteResponse(fns: IExecuteFunctions, response: any): { json: any } {
-    debug('Handling NetSuite response, status:', response.status);
+    debug('Handling NetSuite response, status:', response.status || response.statusCode);
     
-    if (response.status >= 200 && response.status < 300) {
-      return { json: response.data };
+    // Check for successful response using either status or statusCode
+    if ((response.status && response.status >= 200 && response.status < 300) || 
+        (response.statusCode && response.statusCode >= 200 && response.statusCode < 300)) {
+      return { json: response.data || response.body };
     }
     
     // Handle error responses
-    let message = `Request failed with status code ${response.status}`;
+    let message = `Request failed with status code ${response.status || response.statusCode}`;
     
-    if (response.data && response.data.error) {
-      message = response.data.error.message || message;
+    // Extract error details from either data or body
+    const responseData = response.data || response.body;
+    if (responseData && responseData.error) {
+      message = responseData.error.message || responseData.error || message;
     }
     
     if (fns.continueOnFail() !== true) {
-      const error = new NodeApiError(fns.getNode(), response.data);
-      error.message = message;
+      // Create a more robust error object
+      const error = new Error(message);
+      error.name = 'NetSuiteApiError';
       throw error;
     }
     

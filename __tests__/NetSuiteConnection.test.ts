@@ -1,6 +1,7 @@
 /* eslint-env jest, node */
 import { makeRequest } from '@fye/netsuite-rest-api';
 import { NetSuiteRequestType } from '../nodes/NetSuite/NetSuite.node.types';
+import { OAuth2Helper } from '../nodes/NetSuite/OAuth2Helper';
 
 describe('NetSuite Connection', () => {
   // This environment check lets the test be skipped when env vars aren't available
@@ -14,9 +15,20 @@ describe('NetSuite Connection', () => {
       process.env.netsuite_tokenSecret
     );
   };
+  
+  // Check if OAuth2 credentials are available
+  const hasOAuth2Credentials = () => {
+    return (
+      process.env.netsuite_client_id &&
+      process.env.netsuite_client_secret &&
+      process.env.netsuite_account_id &&
+      process.env.netsuite_access_token
+    );
+  };
 
   // Skip tests if credentials aren't available
   const itifOAuth1 = hasOAuth1Credentials() ? it : it.skip;
+  const itifOAuth2 = hasOAuth2Credentials() ? it : it.skip;
 
   describe('OAuth 1.0a Authentication', () => {
     // Method 1: Unit test approach to verify credentials
@@ -110,6 +122,72 @@ describe('NetSuite Connection', () => {
         // We expect this test to pass with a 200 status code
         // This is a hard failure as the task is to achieve a 200 code
         throw new Error(`Failed to connect to NetSuite API: Expected 200 status code but received ${error.response?.statusCode || 'unknown error'}`);
+      }
+    });
+  });
+  
+  describe('OAuth 2.0 Authentication', () => {
+    // Method 1: Unit test approach to verify credentials
+    itifOAuth2('should verify all required OAuth 2.0 environment variables are set', () => {
+      expect(process.env.netsuite_client_id).toBeTruthy();
+      expect(process.env.netsuite_client_secret).toBeTruthy();
+      expect(process.env.netsuite_account_id).toBeTruthy();
+      
+      console.log('✅ All required NetSuite OAuth 2.0 environment variables are set');
+    });
+    
+    // Method 2: Actual API call to verify connection
+    itifOAuth2('should successfully connect to NetSuite API with OAuth 2.0', async () => {
+      // Create OAuth2Helper instance with real credentials
+      const oauth2Helper = new OAuth2Helper({
+        clientId: process.env.netsuite_client_id as string,
+        clientSecret: process.env.netsuite_client_secret as string,
+        accessTokenUri: `https://${process.env.netsuite_account_id}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token`,
+        authUri: 'https://system.netsuite.com/app/login/oauth2/authorize.nl',
+        scope: 'restwebservices',
+        accountId: process.env.netsuite_account_id as string,
+        accessToken: process.env.netsuite_access_token as string,
+        refreshToken: process.env.netsuite_refresh_token as string,
+      });
+      
+      try {
+        // Make a simple API request to test the connection - Using a SuiteQL query
+        const response = await oauth2Helper.makeRequest({
+          url: '/services/rest/query/v1/suiteql',
+          method: 'POST',
+          data: {
+            q: 'SELECT 1 FROM Employee WHERE rownum = 1'
+          }
+        });
+        
+        // Check that the response is valid
+        expect(response.status).toBe(200);
+        expect(response.data).toBeDefined();
+        
+        console.log('✅ Successfully connected to NetSuite with OAuth 2.0!');
+        console.log(`Response status: ${response.status}`);
+        console.log(`Response includes data:`, !!response.data);
+        
+        return response;
+      } catch (error: any) {
+        console.error('❌ Failed to connect to NetSuite with OAuth 2.0:');
+        
+        if (error.response) {
+          console.error('Status code:', error.response.status);
+          console.error('Response data:', error.response.data);
+          
+          // Enhanced error handling for 401 errors
+          if (error.response.status === 401) {
+            console.error('Authentication Error Details:');
+            console.error('- Headers:', error.response.headers);
+            console.error('- Data:', error.response.data);
+          }
+        } else {
+          console.error(error);
+        }
+        
+        // We expect this test to pass with a 200 status code
+        throw new Error(`Failed to connect to NetSuite API with OAuth 2.0: Expected 200 status code but received ${error.response?.status || 'unknown error'}`);
       }
     });
   });
