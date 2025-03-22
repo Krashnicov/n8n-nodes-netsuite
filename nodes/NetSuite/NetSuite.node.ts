@@ -31,30 +31,63 @@ const debug = debuglog('n8n-nodes-netsuite');
 // We'll handle headers directly in the getConfig function instead
 
 const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteResponse) => {
-	// debug(response);
 	debug(`Netsuite response:`, response.statusCode, response.body);
 	let body: JsonObject = {};
 	const {
 		title: webTitle = undefined,
-		// code: restletCode = undefined,
 		'o:errorCode': webCode,
 		'o:errorDetails': webDetails,
 		message: restletMessage = undefined,
 	} = response.body;
+	
+	// Check for authentication headers in 401 responses
+	const authHeader = response.headers['www-authenticate'] || '';
+	
 	if (!(response.statusCode && response.statusCode >= 200 && response.statusCode < 400)) {
 		let message = webTitle || restletMessage || webCode || response.statusText;
 		if (webDetails && webDetails.length > 0) {
 			message = webDetails[0].detail || message;
 		}
 		
-		// Add specific handling for 401 Unauthorized errors
+		// Enhanced handling for 401 Unauthorized errors
 		if (response.statusCode === 401) {
-			message = `Authentication failed (401 Unauthorized): Please verify your NetSuite credentials, especially the hostname format, account ID, and OAuth tokens. ${message}`;
-			debug('NetSuite authentication failed:', message);
+			// Extract specific error details from www-authenticate header
+			let authError = '';
+			let authErrorDesc = '';
+			
+			if (authHeader) {
+				const errorMatch = authHeader.match(/error="([^"]+)"/);
+				const errorDescMatch = authHeader.match(/error_description="([^"]+)"/);
+				
+				if (errorMatch && errorMatch[1]) {
+					authError = errorMatch[1];
+				}
+				
+				if (errorDescMatch && errorDescMatch[1]) {
+					authErrorDesc = errorDescMatch[1];
+				}
+			}
+			
+			message = `Authentication failed (401 Unauthorized): ${authErrorDesc || 'Invalid credentials'}. 
+Error type: ${authError || 'Unknown'}. 
+Please verify:
+1. Your NetSuite hostname format (should be 'suitetalk.api.netsuite.com' without protocol)
+2. Your account ID is correct (${response.request?.options?.url?.includes('accountId=') ? 'included in URL' : 'not found in URL'})
+3. Your OAuth tokens have proper permissions in NetSuite
+4. Your integration record in NetSuite is properly configured
+
+Original error: ${message}`;
+			
+			debug('NetSuite authentication failed:', {
+				statusCode: response.statusCode,
+				authHeader,
+				authError,
+				authErrorDesc,
+				requestUrl: response.request?.options?.url
+			});
 		}
 		
 		if (fns.continueOnFail() !== true) {
-			// const code = webCode || restletCode;
 			const error = new NodeApiError(fns.getNode(), response.body);
 			error.message = message;
 			throw error;
@@ -88,13 +121,17 @@ const handleNetsuiteResponse = (fns: IExecuteFunctions, response: INetSuiteRespo
 			body.success = response.statusCode === 204;
 		}
 	}
-	// debug(body);
+	
 	return { json: body };
 };
 
 const getConfig = (credentials: INetSuiteCredentials) => {
+	// Default hostname if not provided
+	const defaultHostname = 'suitetalk.api.netsuite.com';
+	const hostname = credentials.hostname || defaultHostname;
+	
 	// Remove any protocol prefix from hostname if present
-	const cleanHostname = credentials.hostname.replace(/^https?:\/\//, '');
+	const cleanHostname = hostname.replace(/^https?:\/\//, '');
 	
 	// Check if hostname already includes account ID
 	const netsuiteApiHost = cleanHostname.includes(credentials.accountId)
@@ -105,6 +142,7 @@ const getConfig = (credentials: INetSuiteCredentials) => {
 	debug('NetSuite config:', {
 		host: netsuiteApiHost,
 		accountId: credentials.accountId,
+		originalHostname: hostname,
 	});
 	
 	return {

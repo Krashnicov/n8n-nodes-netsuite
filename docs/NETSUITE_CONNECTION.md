@@ -59,12 +59,38 @@ Response includes data: true
 If the connection fails, you'll see an error message with details about what went wrong:
 
 ```
-❌ Failed to connect to NetSuite:
-[Error details will be shown here]
+❌ Connection failed with status code: 401
+Authentication header: OAuth realm="ACCOUNT_ID", error="token_rejected", error_description="Invalid login attempt."
+
+Authentication Error Details:
+- Realm: ACCOUNT_ID
+- Error Type: token_rejected
+- Error Description: Invalid login attempt.
 ```
 
-Common errors include:
-- Authentication failures (401 errors)
+#### Common Errors and Troubleshooting
+
+##### 401 Unauthorized Errors
+This is the most common error and usually indicates an issue with your OAuth credentials:
+
+1. **Verify hostname format**: 
+   - Correct: `suitetalk.api.netsuite.com` (without account ID prefix or protocol)
+   - Incorrect: `https://suitetalk.api.netsuite.com` or `account123.suitetalk.api.netsuite.com`
+
+2. **Check OAuth Integration in NetSuite**:
+   - Ensure your integration record in NetSuite has the correct permissions
+   - Verify the consumer key and secret match what's in your environment variables
+   - Make sure the token key and secret are valid and not expired
+
+3. **Verify Account ID**:
+   - Confirm your account ID is correct (e.g., `td2950894`)
+   - The account ID should match the one in your NetSuite instance
+
+4. **Check NetSuite Role Permissions**:
+   - The role associated with your OAuth token must have sufficient permissions
+   - Required permissions include: "REST Web Services" and access to the specific records you're trying to access
+
+##### Other Common Issues
 - Missing or incorrect environment variables
 - Network connectivity issues
-- Invalid NetSuite API permissions
+- Rate limiting or IP restrictions in NetSuite
