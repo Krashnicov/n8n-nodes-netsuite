@@ -23,7 +23,12 @@ module.exports = {
 
 	overrides: [
 		{
-			files: ['package.json', 'credentials/**/*.ts', 'nodes/**/*.ts']
+			files: ['package.json'],
+			parser: 'jsonc-eslint-parser',
+			rules: {}
+		},
+		{
+			files: ['credentials/**/*.ts', 'nodes/**/*.ts']
 		},
 	],
 };
