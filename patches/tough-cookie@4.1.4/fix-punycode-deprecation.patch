@@ -1,0 +1,13 @@
+diff --git a/lib/cookie.js b/lib/cookie.js
+index aaaaaaa..bbbbbbb 100644
+--- a/lib/cookie.js
++++ b/lib/cookie.js
+@@ -29,7 +29,7 @@
+ const net = require("net");
+ const urlParse = require("url").parse;
+ const util = require("util");
+-const punycode = require("punycode/");
++const punycode = require("punycode");
+ const { fromCallback } = require("universalify");
+ 
+ // From RFC6265 S4.1.1

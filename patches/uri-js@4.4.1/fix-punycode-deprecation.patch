@@ -1,0 +1,12 @@
+diff --git a/dist/esnext/uri.js b/dist/esnext/uri.js
+index aaaaaaa..bbbbbbb 100644
+--- a/dist/esnext/uri.js
++++ b/dist/esnext/uri.js
+@@ -34,7 +34,7 @@
+ import { SCHEMES } from "./schemes/index.js";
+ export { SCHEMES };
+ import { pctEncChar, pctDecChars, unescapeComponent, escapeComponent } from "./util.js";
+-import punycode from "punycode";
++import punycode from "punycode";
+ export const punycodeName = "punycode".replace(/[^a-zA-Z0-9_]/g, "_");
+ export { pctEncChar, pctDecChars, unescapeComponent, escapeComponent };
