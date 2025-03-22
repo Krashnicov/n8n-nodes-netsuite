@@ -83,10 +83,11 @@ This document provides guidance for contributors looking to submit Pull Requests
 5. Wait for code reviews and address any feedback
 
 ## Testing
-Currently, the repository does not have automated tests. When submitting a PR:
-- Verify functionality manually
-- Attach screenshots or logs of your testing
-- Describe the testing process in the PR description
+The repository uses Jest for automated testing. When submitting a PR:
+- Run `pnpm test` to ensure all tests pass
+- Include test coverage reports with `pnpm test:coverage`
+- For new features, add appropriate tests in the corresponding `__tests__` directory
+- Attach screenshots or logs of your testing results
 
 ## Documentation
 For significant changes, update documentation in the `/docs` directory:
