@@ -24,6 +24,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:connection": "node scripts/test-netsuite-connection.js",
     "prepublishOnly": "npm run build && npm run lint",
     "postinstall": "patch-package"
   },
