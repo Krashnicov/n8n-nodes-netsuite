@@ -18,7 +18,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon -w nodes -w credentials --ext ts --exec 'tsc && n8n'",
+    "dev": "nodemon -w nodes -w credentials --ext ts --exec 'tsc'",
     "build": "tsc && gulp",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
