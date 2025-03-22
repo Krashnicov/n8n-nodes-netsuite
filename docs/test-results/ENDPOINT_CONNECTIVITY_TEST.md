@@ -28,12 +28,12 @@ The workflow includes three operations:
 
 ## NetSuite Credentials Configuration
 The following credentials were configured for the test:
-- Hostname: `${NETSUITE_API_HOSTNAME}` (configured from environment variable)
-- Account ID: `${NETSUITE_ACCOUNT_ID}` (configured from environment variable)
-- Consumer Key: `${consumerKey}` (configured from environment variable)
-- Consumer Secret: `${NETSUITE_CONSUMER_SECRET}` (configured from environment variable)
-- Token Key: `${NETSUITE_TOKEN_KEY}` (configured from environment variable)
-- Token Secret: `${NETSUITE_TOKEN_SECRET}` (configured from environment variable)
+- Hostname: `${netsuite_hostname}` (configured from environment variable)
+- Account ID: `${netsuite_account_id}` (configured from environment variable)
+- Consumer Key: `${netsuite_consumerKey}` (configured from environment variable)
+- Consumer Secret: `${netsuite_consumerSecret}` (configured from environment variable)
+- Token Key: `${netsuite_tokenKey}` (configured from environment variable)
+- Token Secret: `${netsuite_tokenSecret}` (configured from environment variable)
 
 ## Test Workflow Configuration
 ### Get Record Node
