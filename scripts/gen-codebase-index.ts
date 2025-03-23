@@ -250,8 +250,8 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       }
     }
     
-    // Convert map to array for output
-    const index = Array.from(fileMap.values());
+    // Convert map to array for output and sort for consistency across environments
+    const index = Array.from(fileMap.values()).sort((a, b) => a.path.localeCompare(b.path));
     
     // Check mode
     const checkMode = process.argv.includes('--check');
@@ -265,8 +265,14 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       
       // Compare without timestamps to avoid false positives
       const normalizeForComparison = (entries: IndexEntry[]) => 
-        entries.map(({lastUpdated, ...rest}) => rest)
-          .sort((a, b) => a.path.localeCompare(b.path));
+        entries.map(({lastUpdated, ...rest}) => ({
+          ...rest,
+          // Sort arrays for consistent comparison
+          exports: [...rest.exports].sort(),
+          dependencies: [...rest.dependencies].sort(),
+          usedIn: [...rest.usedIn].sort()
+        }))
+        .sort((a, b) => a.path.localeCompare(b.path));
       
       const currentNormalized = normalizeForComparison(index);
       const existingNormalized = normalizeForComparison(existing);
@@ -280,8 +286,15 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       }
     }
     
-    // Write output
-    fs.writeFileSync(INDEX_PATH, JSON.stringify(index, null, 2));
+    // Write output - ensure arrays are sorted for consistency
+    const sortedIndex = index.map(entry => ({
+      ...entry,
+      exports: [...entry.exports].sort(),
+      dependencies: [...entry.dependencies].sort(),
+      usedIn: [...entry.usedIn].sort()
+    }));
+    
+    fs.writeFileSync(INDEX_PATH, JSON.stringify(sortedIndex, null, 2));
     console.log(`[codebase-index] Wrote ${index.length} entries to ${INDEX_PATH}`);
   } catch (error) {
     console.error('[codebase-index] Error:', error);
