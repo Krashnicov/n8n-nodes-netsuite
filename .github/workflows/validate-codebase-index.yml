@@ -1,0 +1,29 @@
+name: Validate Codebase Index
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  validate-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Run index validation
+        run: pnpm ts-node scripts/gen-codebase-index.ts --check
