@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import glob from 'fast-glob';
+import crypto from 'crypto';
 
 // Constants
 const INDEX_PATH = path.resolve('docs/codebase-index.json');
@@ -17,6 +18,10 @@ interface IndexEntry {
   description: string;
   confidence: number; // Add confidence score field
   lastUpdated: string;
+  fileSize?: number;      // New: File size in bytes
+  linesOfCode?: number;   // New: Number of lines of code
+  checksum?: string;      // New: SHA-256 hash of file content
+  language?: string;      // New: Language tag (TS, JS, MD, JSON, etc.)
 }
 
 // Output structure with top-level summary
@@ -145,11 +150,40 @@ const extractDependencies = (filePath: string): string[] => {
   }
 };
 
+// Constants for description handling
+const MIN_DESCRIPTION_LENGTH = 10;
+const DEFAULT_DESCRIPTION = 'No description available';
+
+// Helper function to check if a description is valid
+const isDescriptionValid = (description: string): boolean => {
+  if (!description) return false;
+  if (description.length < MIN_DESCRIPTION_LENGTH) return false;
+  if (description === '{' || description === '}') return false;
+  if (description.match(/^[{}();,\[\]]+$/)) return false;
+  return true;
+};
+
+// Helper function to truncate description to first sentence or 140 chars
+const truncateDescription = (text: string): string => {
+  // Remove any extra whitespace
+  const trimmed = text.trim().replace(/\s+/g, ' ');
+  
+  // Try to get first sentence (ending with period, question mark, or exclamation)
+  const sentenceMatch = trimmed.match(/^(.*?[.!?])\s/);
+  if (sentenceMatch && sentenceMatch[1].length <= 140) {
+    return sentenceMatch[1];
+  }
+  
+  // If no sentence found or it's too long, truncate to 140 chars
+  return trimmed.length <= 140 ? trimmed : trimmed.substring(0, 137) + '...';
+};
+
 // Extract description from file contents
 const extractDescription = (filePath: string): string => {
   try {
     const ext = path.extname(filePath);
     const src = fs.readFileSync(filePath, 'utf-8');
+    let description = '';
     
     // For TypeScript files, try to extract from JSDoc comments first
     if (['.ts', '.js', '.json'].includes(ext)) {
@@ -170,96 +204,118 @@ const extractDescription = (filePath: string): string => {
           .trim();
           
         if (cleanComment.length > 0) {
-          // Keep only first sentence or max 140 characters
-          const firstSentence = cleanComment.split(/\.(?=\s|$)/)[0] + (cleanComment.includes('.') ? '.' : '');
-          return firstSentence.length <= 140 ? firstSentence : cleanComment.substring(0, 140) + '...';
+          description = cleanComment;
         }
       }
       
-      // Look for class/interface/function descriptions via JSDoc
-      let description = '';
-      sourceFile.forEachChild((node) => {
-        if (!description && 
-            (ts.isClassDeclaration(node) || 
-             ts.isInterfaceDeclaration(node) || 
-             ts.isFunctionDeclaration(node)) && 
-            node.name) {
-          const nodeComment = ts.getLeadingCommentRanges(sourceFile.text, node.pos);
-          if (nodeComment && nodeComment.length > 0) {
-            description = sourceFile.text
-              .substring(nodeComment[0].pos, nodeComment[0].end)
-              .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '') // Remove comment markers
-              .trim()
-              .split('\n')
-              .map(line => line.trim())
-              .filter(line => line.length > 0)
-              .join(' ')
-              .trim();
-              
-            // Keep only first sentence or max 140 characters
-            const firstSentence = description.split(/\.(?=\s|$)/)[0] + (description.includes('.') ? '.' : '');
-            description = firstSentence.length <= 140 ? firstSentence : description.substring(0, 140) + '...';
+      // If no description found from file comment, try class/interface/function descriptions
+      if (!isDescriptionValid(description)) {
+        // Look for class/interface/function descriptions via JSDoc
+        sourceFile.forEachChild((node) => {
+          if (!isDescriptionValid(description) && 
+              (ts.isClassDeclaration(node) || 
+               ts.isInterfaceDeclaration(node) || 
+               ts.isFunctionDeclaration(node)) && 
+              node.name) {
+            const nodeComment = ts.getLeadingCommentRanges(sourceFile.text, node.pos);
+            if (nodeComment && nodeComment.length > 0) {
+              const commentText = sourceFile.text
+                .substring(nodeComment[0].pos, nodeComment[0].end)
+                .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '')
+                .trim()
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join(' ')
+                .trim();
+                
+              if (isDescriptionValid(commentText)) {
+                description = commentText;
+              }
+            }
           }
-        }
-      });
+        });
+      }
       
-      if (description) return description;
-      
-      // Fallback for TS/JS: First meaningful code line
-      const lines = src.split('\n');
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (trimmedLine && !trimmedLine.startsWith('import') && !trimmedLine.startsWith('//')) {
-          return trimmedLine.substring(0, 100) + (trimmedLine.length > 100 ? '...' : '');
+      // Fallback: First meaningful code line that's not an import or comment
+      if (!isDescriptionValid(description)) {
+        const lines = src.split('\n');
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine && 
+              !trimmedLine.startsWith('import') && 
+              !trimmedLine.startsWith('//') &&
+              trimmedLine !== '{' &&
+              !trimmedLine.match(/^[{}();,]+$/)) {
+            description = trimmedLine;
+            break;
+          }
         }
       }
     }
     
     // For JSON files, look for description field
-    if (ext === '.json') {
+    if (!isDescriptionValid(description) && ext === '.json') {
       try {
         const json = JSON.parse(src);
-        if (json.description) return json.description;
-        if (json.node && json.codexVersion) return `Node definition for ${json.node}`;
+        if (json.description && isDescriptionValid(json.description)) {
+          description = json.description;
+        } else if (json.name) {
+          description = `Configuration for ${json.name}`;
+        } else if (json.node && json.codexVersion) {
+          description = `Node definition for ${json.node}`;
+        }
       } catch (e) {
         // Invalid JSON, continue with fallback
       }
     }
     
     // For markdown files, use first heading or paragraph
-    if (ext === '.md') {
+    if (!isDescriptionValid(description) && ext === '.md') {
       const lines = src.split('\n');
       // First heading (any level: #, ##, etc)
       const headingMatch = lines.find(line => /^#+\s/.test(line));
-      if (headingMatch) return headingMatch.replace(/^#+\s/, '');
-      
-      // First non-empty paragraph (up to 2 sentences)
-      let paragraph = '';
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].trim() && !lines[i].startsWith('#')) {
-          paragraph += ' ' + lines[i].trim();
-          if (paragraph.includes('. ') && paragraph.split('. ').length > 2) {
-            return paragraph.split('. ').slice(0, 2).join('. ') + '.';
+      if (headingMatch) {
+        description = headingMatch.replace(/^#+\s/, '');
+      } else {
+        // First non-empty paragraph
+        let paragraph = '';
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].trim() && !lines[i].startsWith('#')) {
+            paragraph += ' ' + lines[i].trim();
+          } else if (paragraph) {
+            // End of paragraph
+            description = paragraph.trim();
+            break;
           }
-        } else if (paragraph) {
-          // End of paragraph
-          return paragraph;
+        }
+        if (paragraph && !description) {
+          description = paragraph.trim();
         }
       }
-      if (paragraph) return paragraph;
     }
     
-    // Fallback: Infer from file name and type
-    const fileName = path.basename(filePath);
-    const fileType = inferType(filePath);
+    // Final fallback: Infer from file name and type
+    if (!isDescriptionValid(description)) {
+      const fileName = path.basename(filePath);
+      const fileType = inferType(filePath);
+      
+      if (fileType === 'node') description = `Main node logic for ${fileName.split('.')[0]} integration`;
+      else if (fileType === 'credential') description = `Credential definition for ${fileName.split('.')[0]}`;
+      else if (fileType === 'node-options') description = `UI configuration for ${fileName.split('.')[0]} node`;
+      else if (fileType === 'node-types') description = `Type definitions for ${fileName.split('.')[0]} node`;
+      else if (fileType === 'test') description = `Tests for ${fileName.split('.test')[0]}`;
+      else if (fileType === 'script') description = `Script for ${fileName.split('.')[0]}`;
+      else description = `File ${fileName}`;
+    }
     
-    if (fileType === 'node') return `Main node logic for ${fileName.split('.')[0]} integration`;
-    if (fileType === 'credential') return `Credential definition for ${fileName.split('.')[0]}`;
-    if (fileType === 'node-options') return `UI configuration for ${fileName.split('.')[0]} node`;
-    if (fileType === 'node-types') return `Type definitions for ${fileName.split('.')[0]} node`;
-    if (fileType === 'test') return `Tests for ${fileName.split('.test')[0]}`;
+    // If still no valid description, use default
+    if (!isDescriptionValid(description)) {
+      description = DEFAULT_DESCRIPTION;
+    }
     
-    return `File ${fileName}`;
+    // Truncate description to first sentence or 140 chars max
+    return truncateDescription(description);
   } catch (error) {
     console.error(`Error extracting description from ${filePath}:`, error);
     return `File ${path.basename(filePath)}`;
@@ -294,6 +350,42 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
   return null; // External package
 };
 
+// Calculate file size in bytes
+const calculateFileSize = (filePath: string): number => {
+  try {
+    const stats = fs.statSync(filePath);
+    return stats.size;
+  } catch (error) {
+    console.error(`Error calculating file size for ${filePath}:`, error);
+    return 0;
+  }
+};
+
+// Calculate lines of code
+const calculateLinesOfCode = (content: string): number => {
+  return content.split('\n').filter(line => line.trim().length > 0).length;
+};
+
+// Calculate file checksum (SHA-256)
+const calculateChecksum = (content: string): string => {
+  return crypto.createHash('sha256').update(content).digest('hex');
+};
+
+// Determine file language from extension
+const determineLanguage = (filePath: string): string => {
+  const ext = path.extname(filePath).toLowerCase();
+  const languageMap: Record<string, string> = {
+    '.ts': 'TS',
+    '.js': 'JS',
+    '.json': 'JSON',
+    '.md': 'MD',
+    '.svg': 'SVG',
+    '.css': 'CSS',
+    '.html': 'HTML'
+  };
+  return languageMap[ext] || 'Unknown';
+};
+
 // Normalize dependencies to remove duplicates and standardize paths
 const normalizeDependencies = (dependencies: string[], currentFilePath: string): string[] => {
   const normalizedDeps: string[] = [];
@@ -308,7 +400,24 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     if (dep.startsWith('.')) {
       const resolvedPath = resolveRelativePath(dep, currentFilePath);
       if (resolvedPath) {
+        // Convert to relative path from repo root
         resolvedDep = path.relative(process.cwd(), resolvedPath).replace(/\\/g, '/');
+        
+        // Also add version without extension for better matching
+        const withoutExt = resolvedDep.replace(/\.(ts|js|json|md)$/, '');
+        if (withoutExt !== resolvedDep) {
+          depSet.add(withoutExt);
+          normalizedDeps.push(withoutExt);
+        }
+      }
+    }
+    
+    // For non-relative paths, also add version without extension
+    if (!dep.startsWith('.') && dep.includes('/')) {
+      const withoutExt = dep.replace(/\.(ts|js|json|md)$/, '');
+      if (withoutExt !== dep && !depSet.has(withoutExt)) {
+        depSet.add(withoutExt);
+        normalizedDeps.push(withoutExt);
       }
     }
     
@@ -318,8 +427,6 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       normalizedDeps.push(resolvedDep);
     }
   }
-
-
   
   return normalizedDeps.sort(); // Sort for consistent output
 };
@@ -341,7 +448,9 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     for (const file of files) {
       const abs = path.resolve(file);
       const ext = path.extname(file);
-      // We'll use fileType instead of type later in the code
+      
+      // Read file content once for multiple uses
+      const fileContent = fs.readFileSync(abs, 'utf-8');
       
       let exports: string[] = [];
       let dependencies: string[] = [];
@@ -356,6 +465,10 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       const description = extractDescription(abs);
       const fileType = inferType(file);
       const confidence = calculateConfidence(file, fileType);
+      const fileSize = calculateFileSize(abs);
+      const linesOfCode = calculateLinesOfCode(fileContent);
+      const checksum = calculateChecksum(fileContent);
+      const language = determineLanguage(file);
       
       fileMap.set(file, {
         path: file,
@@ -366,6 +479,10 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
         description,
         confidence,
         lastUpdated: now,
+        fileSize,
+        linesOfCode,
+        checksum,
+        language,
       });
     }
     
@@ -409,15 +526,26 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     // Second pass: populate usedIn arrays by cross-referencing dependencies
     const entries = Array.from(fileMap.values());
     
-    // Create a map for faster lookups - include normalization for paths
+    // Create a map for faster lookups with multiple normalized versions
     const pathToEntryMap = new Map();
     for (const entry of entries) {
+      // Primary path
       pathToEntryMap.set(entry.path, entry);
       
-      // Also add normalized paths (without extensions) for better matching
-      const normalized = entry.path.replace(/\.(ts|js|json)$/, '');
-      if (normalized !== entry.path) {
-        pathToEntryMap.set(normalized, entry);
+      // Without extension for better matching
+      const withoutExt = entry.path.replace(/\.(ts|js|json|md)$/, '');
+      if (withoutExt !== entry.path) {
+        pathToEntryMap.set(withoutExt, entry);
+      }
+      
+      // Basename for better matching with relative imports
+      const basename = path.basename(entry.path);
+      pathToEntryMap.set(basename, entry);
+      
+      // Basename without extension
+      const basenameWithoutExt = path.basename(entry.path).replace(/\.(ts|js|json|md)$/, '');
+      if (basenameWithoutExt !== basename) {
+        pathToEntryMap.set(basenameWithoutExt, entry);
       }
     }
     
@@ -427,16 +555,21 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     for (const entry of entries) {
       for (const dependency of entry.dependencies) {
         // Skip external dependencies (those not in our codebase)
-        if (!dependency.includes('/')) continue;
+        if (!dependency.includes('/') && !dependency.startsWith('.')) continue;
         
         // Try different variations of the dependency path
-        const normalizedDep = dependency.replace(/\.(ts|js|json)$/, '');
+        const normalizedDep = dependency.replace(/\.(ts|js|json|md)$/, '');
+        const baseDep = path.basename(dependency);
+        const baseDepNoExt = path.basename(dependency).replace(/\.(ts|js|json|md)$/, '');
         
         // Debug: Print dependency lookup
         console.log(`[codebase-index] Looking for dependency: ${dependency} from ${entry.path}`);
         
-        // Find the entry that matches this dependency path
-        let dependencyEntry = pathToEntryMap.get(dependency) || pathToEntryMap.get(normalizedDep);
+        // Try all variations to find a match
+        let dependencyEntry = pathToEntryMap.get(dependency) || 
+                             pathToEntryMap.get(normalizedDep) || 
+                             pathToEntryMap.get(baseDep) ||
+                             pathToEntryMap.get(baseDepNoExt);
         
         if (dependencyEntry) {
           // Add this entry's path to the dependency's usedIn array if not already there
