@@ -1,0 +1,45 @@
+name: Codebase Index Validation
+
+on:
+  push:
+    branches: [ main, 'release/*' ]
+    paths:
+      - 'scripts/gen-codebase-index.ts'
+      - 'docs/codebase-index.json'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'scripts/gen-codebase-index.ts'
+      - 'docs/codebase-index.json'
+
+jobs:
+  validate-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Generate and validate codebase index
+        run: |
+          # First generate the index to ensure it's up to date
+          pnpm codebase-index
+          
+          # Then validate that the index is up to date
+          pnpm codebase-index --check
+          
+          # Verify the index was committed correctly
+          if git diff --exit-code docs/codebase-index.json; then
+            echo "✅ Index is up to date and committed correctly"
+          else
+            echo "❌ Index was regenerated but changes were not committed"
+            echo "Please run 'pnpm codebase-index' locally and commit the changes"
+            exit 1
+          fi
