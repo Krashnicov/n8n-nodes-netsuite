@@ -52,6 +52,13 @@ This document provides guidance for contributors looking to submit Pull Requests
      pnpm build
      ```
 
+   - Generate and update the codebase index
+     ```bash
+     pnpm codebase-index
+     ```
+     
+   - Ensure the updated `docs/codebase-index.json` file is included in your commit
+
 5. Commit your changes with descriptive messages
    ```bash
    git commit -m "feat: Add support for XYZ"
@@ -81,6 +88,11 @@ This document provides guidance for contributors looking to submit Pull Requests
    - `testing` for test improvements
 
 5. Wait for code reviews and address any feedback
+
+6. Codebase Index
+- Every PR submission **must include** an updated codebase index (`docs/codebase-index.json`) 
+- Run `pnpm codebase-index` locally before creating a PR
+- If you've made changes that affect the codebase structure, verify that the index is updated
 
 ## Testing
 The repository uses Jest for automated testing. When submitting a PR:

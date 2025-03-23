@@ -45,26 +45,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
-      - name: Generate codebase index
-        run: |
-          # Generate the index
-          pnpm codebase-index || true
-          
-          # Check if index was modified
-          if git diff --exit-code docs/codebase-index.json; then
-            echo "✅ Index is already up to date"
-          else
-            echo "ℹ️ Index was regenerated - this is expected during CI"
-            # Don't fail the build, just note that changes were made
-          fi
+      # The generate step is no longer needed as validate internally reuses the generation logic
+      # - name: Generate codebase index
+      #   run: |
+      #     # This step has been removed as the validate step below internally generates the index
           
       - name: Validate codebase index
         run: |
           # Run validation in check mode
-          # This should now pass since we just regenerated the index
+          # This will internally generate the index and compare it with the committed version
           pnpm codebase-index --check || {
-            echo "❌ Index validation failed even after regeneration"
-            echo "This indicates a deeper issue with the index generation logic"
+            echo "❌ Index validation failed"
+            echo "This indicates the index is out of date or there's an issue with the index generation logic"
             exit 1
           }
           
