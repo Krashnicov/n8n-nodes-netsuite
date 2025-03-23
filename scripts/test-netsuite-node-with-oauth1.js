@@ -76,16 +76,18 @@ async function testSuiteQLQuery() {
     });
     
     console.log('✅ SuiteQL query successful!');
-    console.log(`Status code: ${response.status}`);
+    console.log(`Status code: ${response?.status || 'Unknown'}`);
     
-    if (config.debug) {
+    if (config.debug && response?.data) {
       console.log('Response data:', JSON.stringify(response.data, null, 2));
-    } else {
+    } else if (response?.data) {
       console.log('Response data:', JSON.stringify({
         count: response.data.count,
         hasMore: response.data.hasMore,
         items: response.data.items ? `${response.data.items.length} items` : 'No items'
       }, null, 2));
+    } else {
+      console.log('Response data: No data available');
     }
     
     return {
@@ -128,7 +130,7 @@ async function testRecordRetrieval() {
     });
     
     console.log('✅ Record retrieval successful!');
-    console.log(`Status code: ${response.status}`);
+    console.log(`Status code: ${response?.status || 'Unknown'}`);
     
     // Log only the relevant parts of the response
     if (response && response.data) {
@@ -146,6 +148,8 @@ async function testRecordRetrieval() {
       } else {
         console.log('No customer records found in the response');
       }
+    } else {
+      console.log('Response data: No data available');
     }
     
     // Validate that we got a response
@@ -228,17 +232,13 @@ async function runTest() {
     console.log('\n📊 TEST RESULTS SUMMARY:');
     console.log('------------------------------------------------------------------------');
     console.log(`1. SuiteQL Query: ${suiteQLResult.success ? '✅ SUCCESS' : '❌ FAILED'}`);
-    if (suiteQLResult.statusCode) {
-      console.log(`   Status Code: ${suiteQLResult.statusCode}`);
-    }
+    console.log(`   Status Code: ${suiteQLResult.statusCode || 'Unknown'}`);
     if (suiteQLResult.error) {
       console.log(`   Error: ${suiteQLResult.error}`);
     }
     
     console.log(`2. Record Retrieval: ${recordResult.success ? '✅ SUCCESS' : '❌ FAILED'}`);
-    if (recordResult.statusCode) {
-      console.log(`   Status Code: ${recordResult.statusCode}`);
-    }
+    console.log(`   Status Code: ${recordResult.statusCode || 'Unknown'}`);
     if (recordResult.error) {
       console.log(`   Error: ${recordResult.error}`);
     }
@@ -252,8 +252,8 @@ async function runTest() {
     
     if (overallSuccess) {
       console.log('\n🎉 Successfully connected to NetSuite API with OAuth 1.0a authentication!');
-      console.log(`SuiteQL Status Code: ${suiteQLResult.statusCode}`);
-      console.log(`Record Retrieval Status Code: ${recordResult.statusCode}`);
+      console.log(`SuiteQL Status Code: ${suiteQLResult.statusCode || 'Unknown'}`);
+      console.log(`Record Retrieval Status Code: ${recordResult.statusCode || 'Unknown'}`);
       
       // Save the successful configuration to a file for future reference
       const configFile = '/tmp/netsuite_oauth1_config.json';
