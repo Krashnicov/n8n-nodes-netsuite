@@ -15,6 +15,7 @@ interface IndexEntry {
   dependencies: string[];
   usedIn: string[];
   description: string;
+  confidence: number; // Add confidence score field
   lastUpdated: string;
 }
 
@@ -27,6 +28,7 @@ interface CodebaseIndex {
   generatedBy: string;
   ciRunId: string;
   mode: string;
+  indexBuildId?: string; // Optional UUID for v4+ preparation
   entries: IndexEntry[];
 }
 
@@ -41,6 +43,9 @@ const inferType = (filePath: string): string => {
   // Credentials
   if (filePath.endsWith('.credentials.ts')) return 'credential';
   
+  // Scripts files - new condition
+  if (filePath.startsWith('scripts/') && (filePath.endsWith('.ts') || filePath.endsWith('.js'))) return 'script';
+  
   // Test files
   if (filePath.includes('/__tests__/') || filePath.endsWith('.test.ts') || filePath.endsWith('.test.js')) return 'test';
   
@@ -53,6 +58,38 @@ const inferType = (filePath: string): string => {
   // Default fallback
   return 'other';
 };
+// Calculate confidence score for an entry
+const calculateConfidence = (filePath: string, type: string): number => {
+  // Direct path rule matches (highest confidence)
+  if (
+    filePath.endsWith('.node.ts') ||
+    filePath.endsWith('.node.json') ||
+    filePath.endsWith('.node.options.ts') ||
+    filePath.endsWith('.node.types.ts') ||
+    filePath.endsWith('.credentials.ts')
+  ) {
+    return 1.0; // Direct path rule (e.g. *.node.ts)
+  }
+  
+  // Content-based matches
+  if (
+    type === 'script' ||
+    filePath.includes('/__tests__/') ||
+    filePath.endsWith('.test.ts') ||
+    filePath.endsWith('.test.js')
+  ) {
+    return 0.8; // Content-based match (e.g. AST or regex)
+  }
+  
+  // Fallback with extension hints
+  if (filePath.endsWith('.ts') || filePath.endsWith('.js') || filePath.endsWith('.json')) {
+    return 0.5; // Fallback with extension hints
+  }
+  
+  // Unknown / default
+  return 0.3;
+};
+
 
 // Extract exports from TypeScript files
 const extractExports = (filePath: string): string[] => {
@@ -124,7 +161,7 @@ const extractDescription = (filePath: string): string => {
         const comment = sourceFile.text.substring(fileComment[0].pos, fileComment[0].end);
         // Clean up comment markers and get the first meaningful line/paragraph
         const cleanComment = comment
-          .replace(/\/\*\*|\*\/|\*\s?/g, '')
+          .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '') // Remove comment markers
           .trim()
           .split('\n')
           .map(line => line.trim())
@@ -133,7 +170,9 @@ const extractDescription = (filePath: string): string => {
           .trim();
           
         if (cleanComment.length > 0) {
-          return cleanComment;
+          // Keep only first sentence or max 140 characters
+          const firstSentence = cleanComment.split(/\.(?=\s|$)/)[0] + (cleanComment.includes('.') ? '.' : '');
+          return firstSentence.length <= 140 ? firstSentence : cleanComment.substring(0, 140) + '...';
         }
       }
       
@@ -149,13 +188,17 @@ const extractDescription = (filePath: string): string => {
           if (nodeComment && nodeComment.length > 0) {
             description = sourceFile.text
               .substring(nodeComment[0].pos, nodeComment[0].end)
-              .replace(/\/\*\*|\*\/|\*\s?/g, '')
+              .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '') // Remove comment markers
               .trim()
               .split('\n')
               .map(line => line.trim())
               .filter(line => line.length > 0)
               .join(' ')
               .trim();
+              
+            // Keep only first sentence or max 140 characters
+            const firstSentence = description.split(/\.(?=\s|$)/)[0] + (description.includes('.') ? '.' : '');
+            description = firstSentence.length <= 140 ? firstSentence : description.substring(0, 140) + '...';
           }
         }
       });
@@ -275,6 +318,8 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       normalizedDeps.push(resolvedDep);
     }
   }
+
+
   
   return normalizedDeps.sort(); // Sort for consistent output
 };
@@ -296,7 +341,7 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     for (const file of files) {
       const abs = path.resolve(file);
       const ext = path.extname(file);
-      const type = inferType(file);
+      // We'll use fileType instead of type later in the code
       
       let exports: string[] = [];
       let dependencies: string[] = [];
@@ -309,14 +354,17 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       }
       
       const description = extractDescription(abs);
+      const fileType = inferType(file);
+      const confidence = calculateConfidence(file, fileType);
       
       fileMap.set(file, {
         path: file,
-        type,
+        type: fileType,
         exports,
         dependencies,
         usedIn: [], // Will populate in second pass
         description,
+        confidence,
         lastUpdated: now,
       });
     }
@@ -361,10 +409,16 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     // Second pass: populate usedIn arrays by cross-referencing dependencies
     const entries = Array.from(fileMap.values());
     
-    // Create a map for faster lookups
+    // Create a map for faster lookups - include normalization for paths
     const pathToEntryMap = new Map();
     for (const entry of entries) {
       pathToEntryMap.set(entry.path, entry);
+      
+      // Also add normalized paths (without extensions) for better matching
+      const normalized = entry.path.replace(/\.(ts|js|json)$/, '');
+      if (normalized !== entry.path) {
+        pathToEntryMap.set(normalized, entry);
+      }
     }
     
     // Debug: Print all entries and their paths
@@ -375,11 +429,15 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
         // Skip external dependencies (those not in our codebase)
         if (!dependency.includes('/')) continue;
         
+        // Try different variations of the dependency path
+        const normalizedDep = dependency.replace(/\.(ts|js|json)$/, '');
+        
         // Debug: Print dependency lookup
         console.log(`[codebase-index] Looking for dependency: ${dependency} from ${entry.path}`);
         
         // Find the entry that matches this dependency path
-        const dependencyEntry = pathToEntryMap.get(dependency);
+        let dependencyEntry = pathToEntryMap.get(dependency) || pathToEntryMap.get(normalizedDep);
+        
         if (dependencyEntry) {
           // Add this entry's path to the dependency's usedIn array if not already there
           if (!dependencyEntry.usedIn.includes(entry.path)) {
@@ -437,16 +495,26 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     // Get repository info
     const repoName = path.basename(process.cwd());
     const repoPath = process.cwd();
+    
+    // Generate UUID for indexBuildId
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
 
     // Create the final structured output
     const finalOutput: CodebaseIndex = {
-      indexVersion: "1.2.0",
+      indexVersion: "1.3.0", // Update version number to reflect changes
       generatedAt: new Date().toISOString(),
       repoName,
       repoPath,
-      generatedBy: "codebase-index@1.2.0",
+      generatedBy: "codebase-index@1.3.0", // Update version
       ciRunId,
       mode,
+      indexBuildId: generateUUID(), // Add UUID for indexBuildId
       entries: sortedIndex
     };
 
