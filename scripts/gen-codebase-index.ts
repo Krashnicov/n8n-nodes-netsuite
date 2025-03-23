@@ -618,20 +618,36 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       const normalizeForDeepComparison = (entries: any[]) => {
         return entries.map(entry => {
           // Create a new object without the timestamp and with filtered dependencies
-          const { lastUpdated, checksum, ...rest } = entry;
+          const { lastUpdated, checksum, indexBuildId, confidence, fileSize, linesOfCode, language, ...rest } = entry;
           return {
             ...rest,
             // Filter out external dependencies for comparison
-            dependencies: rest.dependencies.filter((dep: string) => dep.includes('/') || dep.startsWith('.'))
+            dependencies: (rest.dependencies || []).filter((dep: string) => dep.includes('/') || dep.startsWith('.'))
           };
         });
       };
       
+      // Only compare the entries, not the top-level metadata
       const existingNormalizedForComparison = normalizeForDeepComparison(existingNormalized);
       const currentNormalizedForComparison = normalizeForDeepComparison(currentNormalized);
       
-      // Also ignore the indexBuildId in the top-level metadata for comparison
-      if (JSON.stringify(currentNormalizedForComparison) !== JSON.stringify(existingNormalizedForComparison)) {
+      // Sort both arrays by path for consistent comparison
+      const sortByPath = (a: any, b: any) => a.path.localeCompare(b.path);
+      const sortedExisting = existingNormalizedForComparison.sort(sortByPath);
+      const sortedCurrent = currentNormalizedForComparison.sort(sortByPath);
+      
+      // Compare only the essential fields for determining if index is out of date
+      const simplifyForComparison = (entry: any) => ({
+        path: entry.path,
+        type: entry.type,
+        exports: entry.exports,
+        dependencies: entry.dependencies
+      });
+      
+      const simplifiedExisting = sortedExisting.map(simplifyForComparison);
+      const simplifiedCurrent = sortedCurrent.map(simplifyForComparison);
+      
+      if (JSON.stringify(simplifiedCurrent) !== JSON.stringify(simplifiedExisting)) {
         console.error('[codebase-index] Index is out of date. Run the tool to regenerate.');
         process.exit(1);
       } else {
