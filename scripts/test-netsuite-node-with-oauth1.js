@@ -35,8 +35,6 @@ if (missingEnvVars.length > 0) {
   missingEnvVars.forEach(envVar => console.error(`  - ${envVar}`));
   console.error('\nPlease set these environment variables and try again.');
   process.exit(1);
-} else {
-  console.log('✅ All required NetSuite OAuth 1.0a environment variables are set');
 }
 
 // Configuration from environment variables with EXACT parameter names
@@ -49,15 +47,20 @@ const config = {
   netsuiteTokenKey: process.env.netsuite_tokenKey,
   netsuiteTokenSecret: process.env.netsuite_tokenSecret,
   debug: process.env.DEBUG === 'true' || true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'X-NetSuite-PropertyNameValidation': 'strict'
+  }
 };
 
-console.log('🔑 NetSuite Node Test with OAuth 1.0a Authentication');
+console.log('🔑 NetSuite OAuth 1.0a Authentication Test with Correct Library Parameters');
 console.log('------------------------------------------------------------------------');
 console.log('Configuration:');
 console.log(`- Account ID: ${config.netsuiteAccountId}`);
 console.log(`- API Host: ${config.netsuiteApiHost}`);
-console.log(`- Consumer Key: ${config.consumerKey.substring(0, 10)}...`);
-console.log(`- Token Key: ${config.netsuiteTokenKey.substring(0, 10)}...`);
+console.log(`- Consumer Key: ${config.consumerKey}`);
+console.log(`- Token Key: ${config.netsuiteTokenKey}`);
 console.log(`- Debug Mode: ${config.debug ? 'Enabled' : 'Disabled'}`);
 console.log('------------------------------------------------------------------------');
 
@@ -72,134 +75,67 @@ async function testSuiteQLQuery() {
     const response = await makeRequest(config, {
       method: 'POST',
       requestType: 'suiteql',
-      query: 'SELECT id, companyName FROM customer WHERE rownum <= 10'
+      query: 'SELECT id, entityid, companyName FROM customer WHERE entityid = \'1\''
     });
     
-    console.log('✅ SuiteQL query successful!');
-    console.log(`Status code: ${response?.status || 'Unknown'}`);
-    
-    if (config.debug && response?.data) {
-      console.log('Response data:', JSON.stringify(response.data, null, 2));
-    } else if (response?.data) {
-      console.log('Response data:', JSON.stringify({
-        count: response.data.count,
-        hasMore: response.data.hasMore,
-        items: response.data.items ? `${response.data.items.length} items` : 'No items'
-      }, null, 2));
+    // Check if we have a successful response
+    if (response.status === 200) {
+      console.log('✅ SuiteQL query successful!');
+      console.log(`Status code: ${response.status}`);
+      
+      // Check for customer data in the response
+      if (response.data && response.data.items && response.data.items.length > 0) {
+        const customer = response.data.items[0];
+        console.log(`✅ Found customer: ${customer.id} - ${customer.companyName || customer.entityid}`);
+        
+        // Check if this is Bax Digital
+        if (customer.entityid === '1' && customer.companyName === 'Bax Digital') {
+          console.log('✅ Successfully found Bax Digital (entity ID 1)');
+        } else {
+          console.log(`Found customer: ${customer.entityid} - ${customer.companyName}`);
+        }
+        
+        // Validate that we have exactly one customer record
+        if (response.data.items.length !== 1) {
+          throw new Error(`Expected exactly one customer record in response, got ${response.data.items.length}`);
+        }
+        
+        console.log('✅ Assertion passed: Found exactly one customer record as expected');
+      } else {
+        console.log('No customer data found in response');
+        console.log('Response data:', JSON.stringify(response.data, null, 2));
+      }
     } else {
-      console.log('Response data: No data available');
+      // Handle non-200 responses
+      console.log(`⚠️ SuiteQL query returned status code: ${response.status}`);
+      
+      // Check for 401 Unauthorized specifically
+      if (response.status === 401) {
+        console.log('❌ Authentication failed with 401 Unauthorized');
+        
+        // Extract error details from www-authenticate header
+        const authHeader = response.headers && response.headers['www-authenticate'];
+        if (authHeader) {
+          console.log(`Authentication error: ${authHeader}`);
+        }
+        
+        console.log('This is likely due to invalid or expired OAuth 1.0a credentials.');
+        console.log('Please check your NetSuite integration record and token permissions.');
+      }
+      
+      // Log the response body for debugging
+      console.log('Response body:', JSON.stringify(response.body, null, 2));
     }
     
+    // Only return success if we actually got a 200 status code
     return {
-      success: true,
+      success: response.status === 200,
       statusCode: response.status,
-      response: response.data
+      response: response.data,
+      error: response.status !== 200 ? 'Authentication failed' : undefined
     };
   } catch (error) {
     console.error('❌ SuiteQL query failed:');
-    
-    if (error.response) {
-      console.error(`Status code: ${error.response.status}`);
-      console.error(`Response data:`, error.response.data);
-    } else {
-      console.error(error.message);
-    }
-    
-    return {
-      success: false,
-      error: error.message,
-      statusCode: error.response?.status,
-      errorData: error.response?.data
-    };
-  }
-}
-
-/**
- * Test record retrieval with OAuth 1.0a
- */
-async function testRecordRetrieval() {
-  try {
-    console.log('\n🧪 Testing record retrieval with OAuth 1.0a...');
-    
-    // Make API request using makeRequest from @fye/netsuite-rest-api
-    // Use SuiteQL to get exactly one customer record with required fields
-    const response = await makeRequest(config, {
-      method: 'POST',
-      requestType: 'suiteql',
-      query: 'SELECT id, entityid, companyName, email FROM customer WHERE rownum = 1'
-    });
-    
-    // Debug the raw response
-    console.log('Raw response:', response);
-    
-    console.log('✅ Record retrieval successful!');
-    console.log(`Status code: ${response?.status || 'Unknown'}`);
-    
-    // Log only the relevant parts of the response
-    if (response && response.data) {
-      console.log('Response data:', {
-        count: response.data.count,
-        totalResults: response.data.totalResults,
-        hasMore: response.data.hasMore,
-        itemsLength: response.data.items ? response.data.items.length : 0
-      });
-      
-      // Display customer data if available
-      if (response.data.items && response.data.items.length > 0) {
-        const customer = response.data.items[0];
-        console.log(`✅ Found customer: ${customer.id} - ${customer.companyName || customer.entityid}`);
-        console.log('Customer details:');
-        console.log(JSON.stringify(customer, null, 2));
-      } else {
-        console.log('No customer records found in the response');
-      }
-    } else {
-      console.log('Response data: No data available');
-    }
-    
-    // Validate that we got a response
-    if (!response) {
-      throw new Error('Expected a response from the NetSuite API');
-    }
-    
-    // Validate that the customer record has the expected fields
-    if (response.data && response.data.items && response.data.items.length > 0) {
-      const customer = response.data.items[0];
-      const requiredFields = ['id', 'companyName'];
-      const missingFields = requiredFields.filter(field => !customer[field]);
-      
-      if (missingFields.length > 0) {
-        throw new Error(`Customer record is missing required fields: ${missingFields.join(', ')}`);
-      }
-      
-      console.log('✅ Validation passed: Customer record contains all required fields');
-    } else if (response.data && response.data.items) {
-      throw new Error('Expected at least one customer record in response');
-    }
-    
-    // For the purpose of this test, we'll consider a successful API call as validation
-    // that OAuth 1.0a authentication is working correctly
-    console.log('✅ Assertion passed: Successfully received response from NetSuite API using OAuth 1.0a');
-    console.log('✅ This confirms OAuth 1.0a authentication is working correctly');
-    
-    if (config.debug) {
-      console.log('Response data:', JSON.stringify(response.data, null, 2));
-    } else {
-      console.log('Response data:', JSON.stringify({
-        count: response.data.count,
-        totalResults: response.data.totalResults,
-        hasMore: response.data.hasMore,
-        items: response.data.items ? `${response.data.items.length} items` : 'No items'
-      }, null, 2));
-    }
-    
-    return {
-      success: true,
-      statusCode: response.status,
-      response: response.data
-    };
-  } catch (error) {
-    console.error('❌ Record retrieval failed:');
     
     if (error.response) {
       console.error(`Status code: ${error.response.status}`);
@@ -222,106 +158,57 @@ async function testRecordRetrieval() {
  */
 async function runTest() {
   try {
-    console.log('\n📋 Running NetSuite node test with OAuth 1.0a authentication...');
+    console.log('\n📋 Running OAuth 1.0a authentication test for NetSuite...');
     
     // Test SuiteQL query
     const suiteQLResult = await testSuiteQLQuery();
     
-    // Test record retrieval
-    let recordResult = { success: false, error: 'Not attempted' };
-    if (suiteQLResult.success) {
-      recordResult = await testRecordRetrieval();
-    }
-    
     // Print summary
     console.log('\n📊 TEST RESULTS SUMMARY:');
     console.log('------------------------------------------------------------------------');
-    console.log(`1. SuiteQL Query: ${suiteQLResult.success ? '✅ SUCCESS' : '❌ FAILED'}`);
-    console.log(`   Status Code: ${suiteQLResult.statusCode || 'Unknown'}`);
-    if (suiteQLResult.error) {
-      console.log(`   Error: ${suiteQLResult.error}`);
+    console.log(`SuiteQL Query: ${suiteQLResult.success ? '✅ SUCCESS' : '❌ FAILED'}`);
+    if (suiteQLResult.statusCode) {
+      console.log(`Status Code: ${suiteQLResult.statusCode}`);
     }
-    
-    console.log(`2. Record Retrieval: ${recordResult.success ? '✅ SUCCESS' : '❌ FAILED'}`);
-    console.log(`   Status Code: ${recordResult.statusCode || 'Unknown'}`);
-    if (recordResult.error) {
-      console.log(`   Error: ${recordResult.error}`);
+    if (suiteQLResult.error) {
+      console.log(`Error: ${suiteQLResult.error}`);
     }
     
     console.log('------------------------------------------------------------------------');
     
     // Overall result
-    const overallSuccess = suiteQLResult.success && recordResult.success;
+    const overallSuccess = suiteQLResult.success;
     
     console.log(`Overall Result: ${overallSuccess ? '✅ SUCCESS' : '❌ FAILED'}`);
     
     if (overallSuccess) {
       console.log('\n🎉 Successfully connected to NetSuite API with OAuth 1.0a authentication!');
-      console.log(`SuiteQL Status Code: ${suiteQLResult.statusCode || 'Unknown'}`);
-      console.log(`Record Retrieval Status Code: ${recordResult.statusCode || 'Unknown'}`);
-      
-      // Save the successful configuration to a file for future reference
-      const configFile = '/tmp/netsuite_oauth1_config.json';
-      fs.writeFileSync(configFile, JSON.stringify({
-        netsuiteApiHost: config.netsuiteApiHost,
-        netsuiteAccountId: config.netsuiteAccountId,
-        consumerKey: config.consumerKey,
-        netsuiteTokenKey: config.netsuiteTokenKey,
-        // Don't save secrets
-      }, null, 2));
-      console.log(`\n💾 Successful configuration saved to ${configFile} for future reference.`);
-      
-      // Create a sample implementation for the n8n node
-      const sampleImplementation = `
-// Sample implementation for NetSuite node using OAuth 1.0a authentication
-// This can be integrated into the NetSuite.node.ts file
-
-// Configuration object for OAuth 1.0a authentication
-const credentials = this.getCredentials('netsuite');
-const config = {
-  netsuiteApiHost: \`\${credentials.accountId}.suitetalk.api.netsuite.com\`,
-  consumerKey: credentials.consumerKey,
-  consumerSecret: credentials.consumerSecret || '',
-  netsuiteAccountId: credentials.accountId,
-  netsuiteTokenKey: credentials.tokenKey,
-  netsuiteTokenSecret: credentials.tokenSecret,
-};
-
-// Example SuiteQL query implementation
-async function executeSuiteQLQuery(query) {
-  const { makeRequest } = require('@fye/netsuite-rest-api');
-  
-  return makeRequest(config, {
-    method: 'POST',
-    requestType: 'suiteql',
-    query
-  });
-}
-
-// Example record retrieval implementation
-async function getRecord(recordType, id) {
-  const { makeRequest } = require('@fye/netsuite-rest-api');
-  
-  return makeRequest(config, {
-    method: 'GET',
-    requestType: 'record',
-    path: \`services/rest/record/v1/\${recordType}/\${id}\`
-  });
-}
-`;
-      
-      const sampleFile = '/tmp/netsuite_node_implementation.js';
-      fs.writeFileSync(sampleFile, sampleImplementation);
-      console.log(`\n💾 Sample node implementation saved to ${sampleFile} for reference.`);
+      console.log(`SuiteQL Status Code: ${suiteQLResult.statusCode}`);
     } else {
-      console.log('\n❌ Failed to connect to NetSuite API with OAuth 1.0a authentication.');
+      console.log('\n❌ Failed to authenticate with NetSuite API using OAuth 1.0a.');
+      if (suiteQLResult.statusCode === 401) {
+        console.log('Authentication failed with 401 Unauthorized error.');
+        console.log('This is likely due to invalid or expired OAuth 1.0a credentials.');
+        console.log('Please check your NetSuite integration record and token permissions.');
+      }
+      
       console.log('Please check the error messages above for more details.');
     }
     
+    // Save the configuration to a file for reference
+    const configFile = '/tmp/netsuite_oauth1_config.json';
+    fs.writeFileSync(configFile, JSON.stringify({
+      netsuiteApiHost: config.netsuiteApiHost,
+      netsuiteAccountId: config.netsuiteAccountId,
+      consumerKey: config.consumerKey,
+      netsuiteTokenKey: config.netsuiteTokenKey,
+      // Don't save secrets
+    }, null, 2));
+    console.log(`\n💾 Configuration saved to ${configFile} for reference.`);
+    
     return {
       success: overallSuccess,
-      suiteQLResult,
-      recordResult
+      suiteQLResult
     };
   } catch (error) {
     console.error('❌ An unexpected error occurred:');

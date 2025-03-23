@@ -25,6 +25,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:connection": "node scripts/test-netsuite-connection.js",
+    "test:oauth1": "jest OAuth1Helper.test.ts",
+    "test:oauth1-customer": "node scripts/test-netsuite-node-with-oauth1.js",
     "tunnel": "node scripts/start-ngrok.js",
     "prepublishOnly": "npm run build && npm run lint",
     "postinstall": "patch-package",

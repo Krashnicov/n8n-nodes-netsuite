@@ -126,6 +126,7 @@ Original error: ${message}`;
 };
 
 import { OAuth2Helper } from './OAuth2Helper';
+import { OAuth1Helper } from './OAuth1Helper';
 
 const getConfig = (credentials: INetSuiteCredentials) => {
 	if (credentials.authentication === 'oauth2') {
@@ -173,8 +174,18 @@ const getConfig = (credentials: INetSuiteCredentials) => {
 		originalHostname: hostname,
 	});
 	
+	// Initialize OAuth1Helper for token refresh
+	const oauth1Helper = new OAuth1Helper({
+		consumerKey: credentials.consumerKey as string,
+		consumerSecret: credentials.consumerSecret as string,
+		tokenKey: credentials.tokenKey as string,
+		tokenSecret: credentials.tokenSecret as string,
+		accountId: credentials.accountId as string,
+	});
+	
 	return {
 		netsuiteApiHost,
+		oauth1Helper, // Add the helper to the config
 		consumerKey: credentials.consumerKey,
 		consumerSecret: credentials.consumerSecret,
 		netsuiteAccountId: credentials.accountId,

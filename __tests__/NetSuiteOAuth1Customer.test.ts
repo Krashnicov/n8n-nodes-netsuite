@@ -109,7 +109,9 @@ describe('NetSuite OAuth 1.0a Customer Search', () => {
     } catch (error) {
       console.error('❌ Failed to connect to NetSuite:');
       
-      if (error.response && error.response.status === 401) {
+      if (error && typeof error === 'object' && 'response' in error && 
+          error.response && typeof error.response === 'object' && 'status' in error.response && 
+          error.response.status === 401) {
         console.error('Authentication failed with 401 Unauthorized');
         console.error('This is a known issue in CI environments - see TODO comment above');
       } else {
