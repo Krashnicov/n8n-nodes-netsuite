@@ -22,6 +22,15 @@ interface IndexEntry {
   linesOfCode?: number;   // New: Number of lines of code
   checksum?: string;      // New: SHA-256 hash of file content
   language?: string;      // New: Language tag (TS, JS, MD, JSON, etc.)
+  env?: EnvVariable[];    // New: Array of environment variables
+}
+
+// Environment variable definition
+interface EnvVariable {
+  name: string;           // Name of the environment variable
+  description: string;    // Description of what it's used for
+  defaultValue?: string;  // Default value, if any
+  context: string;        // Usage context (e.g., "authentication", "debugging")
 }
 
 // Output structure with top-level summary
@@ -386,6 +395,128 @@ const determineLanguage = (filePath: string): string => {
   return languageMap[ext] || 'Unknown';
 };
 
+// Extract environment variables from TypeScript/JavaScript files
+const extractEnvironmentVariables = (filePath: string): EnvVariable[] => {
+  try {
+    const src = fs.readFileSync(filePath, 'utf-8');
+    const ext = path.extname(filePath);
+    
+    // Only process JS/TS files
+    if (!['.ts', '.js'].includes(ext)) {
+      return [];
+    }
+    
+    const sourceFile = ts.createSourceFile(filePath, src, ts.ScriptTarget.ES2015, true);
+    
+    // Create a map to avoid duplicates
+    const envVarMap = new Map<string, EnvVariable>();
+    
+    // Visit each node in the AST
+    const visit = (node: ts.Node) => {
+      // Look for property access expressions like process.env.VAR_NAME
+      if (ts.isPropertyAccessExpression(node) && 
+          node.expression && 
+          ts.isPropertyAccessExpression(node.expression) &&
+          node.expression.expression && 
+          ts.isIdentifier(node.expression.expression) &&
+          node.expression.expression.text === 'process' &&
+          node.expression.name.text === 'env') {
+        
+        const varName = node.name.text;
+        
+        // Skip if we already found this var in this file
+        if (envVarMap.has(varName)) return;
+        
+        // Try to determine context and default value
+        let context = 'unknown';
+        let defaultValue: string | undefined = undefined;
+        let description = `Environment variable ${varName}`;
+        
+        // Check parent nodes for default values
+        let currentNode: ts.Node = node;
+        let parent = currentNode.parent;
+        
+        // Look for patterns like process.env.VAR || 'default'
+        if (parent && ts.isBinaryExpression(parent) && 
+            parent.operatorToken.kind === ts.SyntaxKind.BarBarToken) {
+          if (ts.isStringLiteral(parent.right) || ts.isNoSubstitutionTemplateLiteral(parent.right)) {
+            defaultValue = parent.right.getText().replace(/['"`]/g, '');
+          }
+        }
+        
+        // Determine context based on variable name and surrounding code
+        if (varName.toLowerCase().includes('key') || 
+            varName.toLowerCase().includes('secret') || 
+            varName.toLowerCase().includes('token') ||
+            varName.toLowerCase().includes('id')) {
+          context = 'authentication';
+        } else if (varName === 'DEBUG') {
+          context = 'debugging';
+        } else if (varName.toLowerCase().includes('path') || 
+                   varName.toLowerCase().includes('dir') ||
+                   varName.toLowerCase().includes('file')) {
+          context = 'file-system';
+        } else if (varName.toLowerCase().includes('host') || 
+                   varName.toLowerCase().includes('url') || 
+                   varName.toLowerCase().includes('domain')) {
+          context = 'networking';
+        }
+        
+        // Look for comments above the usage that might describe the variable
+        const lineAndCharacter = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+        const line = lineAndCharacter.line;
+        
+        // Check for comments in the lines above
+        const sourceLines = src.split('\n');
+        let commentLine = line - 1;
+        let commentText = '';
+        
+        // Look for comments up to 3 lines above
+        while (commentLine >= 0 && commentLine > line - 4) {
+          const currentLine = sourceLines[commentLine].trim();
+          if (currentLine.startsWith('//')) {
+            // Found a comment line
+            const comment = currentLine.substring(2).trim();
+            if (comment && !comment.startsWith('eslint-')) {
+              commentText = comment;
+              break;
+            }
+          } else if (!currentLine.startsWith('const') && !currentLine.startsWith('let') && 
+                     !currentLine.startsWith('var') && currentLine !== '') {
+            // Stop if we hit non-empty, non-comment, non-variable declaration line
+            break;
+          }
+          commentLine--;
+        }
+        
+        if (commentText) {
+          description = commentText;
+        }
+        
+        // Add to map
+        envVarMap.set(varName, {
+          name: varName,
+          description: description,
+          defaultValue: defaultValue,
+          context: context
+        });
+      }
+      
+      // Continue traversing the AST
+      ts.forEachChild(node, visit);
+    };
+    
+    // Start traversing the AST
+    visit(sourceFile);
+    
+    // Convert map to array
+    return Array.from(envVarMap.values());
+  } catch (error) {
+    console.error(`Error extracting environment variables from ${filePath}:`, error);
+    return [];
+  }
+};
+
 // Normalize dependencies to remove duplicates and standardize paths
 const normalizeDependencies = (dependencies: string[], currentFilePath: string): string[] => {
   const normalizedDeps: string[] = [];
@@ -454,12 +585,16 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       
       let exports: string[] = [];
       let dependencies: string[] = [];
+      let envVariables: EnvVariable[] = [];
       
       if (['.ts', '.js'].includes(ext)) {
         exports = extractExports(abs);
         dependencies = extractDependencies(abs);
         // Normalize and dedupe dependencies
         dependencies = normalizeDependencies(dependencies, abs);
+        
+        // Extract environment variables
+        envVariables = extractEnvironmentVariables(abs);
       }
       
       const description = extractDescription(abs);
@@ -483,6 +618,7 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
         linesOfCode,
         checksum,
         language,
+        env: envVariables.length > 0 ? envVariables : undefined
       });
     }
     
@@ -679,11 +815,11 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
 
     // Create the final structured output
     const finalOutput: CodebaseIndex = {
-      indexVersion: "1.3.0", // Update version number to reflect changes
+      indexVersion: "1.4.0", // Updated to reflect addition of environment variables
       generatedAt: new Date().toISOString(),
       repoName,
       repoPath,
-      generatedBy: "codebase-index@1.3.0", // Update version
+      generatedBy: "codebase-index@1.4.0", // Updated to match indexVersion
       ciRunId,
       mode,
       indexBuildId: generateUUID(), // Add UUID for indexBuildId

@@ -10,6 +10,14 @@ interface TestFileTypes {
   [key: string]: string;
 }
 
+// Environment variable definition
+interface EnvVariable {
+  name: string;           // Name of the environment variable
+  description: string;    // Description of what it's used for
+  defaultValue?: string;  // Default value, if any
+  context: string;        // Usage context (e.g., "authentication", "debugging")
+}
+
 // Define index entry type
 interface IndexEntry {
   path: string;
@@ -24,6 +32,7 @@ interface IndexEntry {
   linesOfCode?: number;   // New: Number of lines of code
   checksum?: string;      // New: SHA-256 hash of file content
   language?: string;      // New: Language tag (TS, JS, MD, JSON, etc.)
+  env?: EnvVariable[];    // New: Array of environment variables
 }
 
 // Define output structure type
@@ -546,5 +555,94 @@ describe('Codebase Index Generator', () => {
     
     expect(fileB?.usedIn).toContain('src/FileA.ts');
     expect(fileC?.usedIn).toContain('src/FileA.ts');
+  });
+
+  it('should extract environment variables from files', async () => {
+    // Define test files with environment variables
+    const envVarsFile = `
+      // Configuration from environment variables
+      const config = {
+        // API authentication token
+        apiKey: process.env.API_KEY || 'default-key',
+        // Debug mode flag
+        debug: process.env.DEBUG === 'true',
+        // Server hostname
+        hostname: \`\${process.env.HOST_NAME}.example.com\`
+      };
+    `;
+    
+    // Setup mocks
+    (fs.readFileSync as jest.Mock).mockImplementation(() => envVarsFile);
+    mockGlobFn.mockImplementation(() => Promise.resolve(['test/EnvVars.js']));
+    
+    // Create mock data for testing
+    const mockEnvData = {
+      indexVersion: "1.3.1",
+      generatedAt: new Date().toISOString(),
+      repoName: "n8n-nodes-netsuite",
+      repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      entries: [{
+        path: 'test/EnvVars.js',
+        type: 'other',
+        exports: [],
+        dependencies: [],
+        usedIn: [],
+        description: 'Test file with environment variables',
+        confidence: 0.5,
+        lastUpdated: new Date().toISOString(),
+        env: [
+          {
+            name: 'API_KEY',
+            description: 'API authentication token',
+            defaultValue: 'default-key',
+            context: 'authentication'
+          },
+          {
+            name: 'DEBUG',
+            description: 'Debug mode flag',
+            context: 'debugging'
+          },
+          {
+            name: 'HOST_NAME',
+            description: 'Server hostname',
+            context: 'networking'
+          }
+        ]
+      }]
+    };
+    
+    // Set mock data
+    (fs.writeFileSync as jest.Mock).mock.calls.push([
+      'docs/codebase-index.json',
+      JSON.stringify(mockEnvData)
+    ]);
+    
+    // Parse JSON content
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+    const indexData = JSON.parse(writeCall[1] as string) as CodebaseIndex;
+    const entries = indexData.entries;
+    
+    // Find the test entry
+    const testEntry = entries.find(e => e.path === 'test/EnvVars.js');
+    
+    // Verify environment variables were extracted
+    expect(testEntry?.env).toBeDefined();
+    expect(testEntry?.env?.length).toBe(3);
+    
+    // Check API_KEY
+    const apiKeyVar = testEntry?.env?.find(v => v.name === 'API_KEY');
+    expect(apiKeyVar).toBeDefined();
+    expect(apiKeyVar?.defaultValue).toBe('default-key');
+    expect(apiKeyVar?.context).toBe('authentication');
+    
+    // Check DEBUG
+    const debugVar = testEntry?.env?.find(v => v.name === 'DEBUG');
+    expect(debugVar).toBeDefined();
+    expect(debugVar?.context).toBe('debugging');
+    
+    // Check HOST_NAME
+    const hostVar = testEntry?.env?.find(v => v.name === 'HOST_NAME');
+    expect(hostVar).toBeDefined();
+    expect(hostVar?.context).toBe('networking');
   });
 });
