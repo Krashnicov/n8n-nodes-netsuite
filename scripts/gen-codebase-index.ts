@@ -24,25 +24,33 @@ interface CodebaseIndex {
   generatedAt: string;
   repoName: string;
   repoPath: string;
+  generatedBy: string;
+  ciRunId: string;
+  mode: string;
   entries: IndexEntry[];
 }
 
 // File type inference based on path and content
 const inferType = (filePath: string): string => {
-  if (filePath.includes('/nodes/') && filePath.endsWith('.node.ts')) return 'node';
-  if (filePath.includes('/nodes/') && filePath.endsWith('options.ts')) return 'node-options';
-  if (filePath.includes('/nodes/') && filePath.endsWith('types.ts')) return 'node-types';
-  if (filePath.includes('/credentials/') && filePath.endsWith('.ts')) return 'credential';
+  // Node-related files
+  if (filePath.endsWith('.node.ts')) return 'node';
   if (filePath.endsWith('.node.json')) return 'codex';
-  if (filePath.includes('/__tests__/') || filePath.includes('.test.')) return 'test';
-  if (filePath.includes('/docs/') && filePath.endsWith('.md')) return 'doc';
-  if (filePath.includes('/scripts/') && (filePath.endsWith('.js') || filePath.endsWith('.ts'))) return 'script';
+  if (filePath.endsWith('.node.options.ts')) return 'node-options';
+  if (filePath.endsWith('.node.types.ts')) return 'node-types';
+  
+  // Credentials
+  if (filePath.endsWith('.credentials.ts')) return 'credential';
+  
+  // Test files
+  if (filePath.includes('/__tests__/') || filePath.endsWith('.test.ts') || filePath.endsWith('.test.js')) return 'test';
   
   // Config files
-  if (filePath.includes('gulpfile') || 
-      filePath.includes('jest.config') || 
-      filePath.includes('.eslintrc')) return 'config';
+  if (filePath.endsWith('.config.js') || 
+      filePath.includes('.eslintrc') || 
+      filePath.endsWith('tsconfig.json') || 
+      filePath.endsWith('package.json')) return 'config';
   
+  // Default fallback
   return 'other';
 };
 
@@ -178,9 +186,9 @@ const extractDescription = (filePath: string): string => {
     // For markdown files, use first heading or paragraph
     if (ext === '.md') {
       const lines = src.split('\n');
-      // First heading
-      const headingMatch = lines.find(line => line.startsWith('# '));
-      if (headingMatch) return headingMatch.replace('# ', '');
+      // First heading (any level: #, ##, etc)
+      const headingMatch = lines.find(line => /^#+\s/.test(line));
+      if (headingMatch) return headingMatch.replace(/^#+\s/, '');
       
       // First non-empty paragraph (up to 2 sentences)
       let paragraph = '';
@@ -335,8 +343,55 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     // Convert map to array for output and sort for consistency across environments
     const index = Array.from(fileMap.values()).sort((a, b) => a.path.localeCompare(b.path));
     
-    // Check mode
+    // Parse command line arguments
     const checkMode = process.argv.includes('--check');
+    
+    // Get CI run ID from command line or default
+    const ciRunIdArg = process.argv.find(arg => arg.startsWith('--ci-run-id='));
+    const ciRunId = ciRunIdArg 
+      ? ciRunIdArg.split('=')[1] 
+      : process.env.CI_COMMIT_SHA || process.env.BUILD_ID || 'manual';
+    
+    // Get mode from command line or default
+    const modeArg = process.argv.find(arg => arg.startsWith('--mode='));
+    const mode = modeArg 
+      ? modeArg.split('=')[1] 
+      : (process.env.CI ? 'ci' : 'manual');
+    
+    // Second pass: populate usedIn arrays by cross-referencing dependencies
+    const entries = Array.from(fileMap.values());
+    
+    // Create a map for faster lookups
+    const pathToEntryMap = new Map();
+    for (const entry of entries) {
+      pathToEntryMap.set(entry.path, entry);
+    }
+    
+    // Debug: Print all entries and their paths
+    console.log('[codebase-index] Total entries:', entries.length);
+    
+    for (const entry of entries) {
+      for (const dependency of entry.dependencies) {
+        // Skip external dependencies (those not in our codebase)
+        if (!dependency.includes('/')) continue;
+        
+        // Debug: Print dependency lookup
+        console.log(`[codebase-index] Looking for dependency: ${dependency} from ${entry.path}`);
+        
+        // Find the entry that matches this dependency path
+        const dependencyEntry = pathToEntryMap.get(dependency);
+        if (dependencyEntry) {
+          // Add this entry's path to the dependency's usedIn array if not already there
+          if (!dependencyEntry.usedIn.includes(entry.path)) {
+            dependencyEntry.usedIn.push(entry.path);
+            console.log(`[codebase-index] Added ${entry.path} to usedIn for ${dependency}`);
+          }
+        } else {
+          console.log(`[codebase-index] Dependency not found: ${dependency}`);
+        }
+      }
+    }
+      
     if (checkMode) {
       if (!fs.existsSync(INDEX_PATH)) {
         console.error('[codebase-index] Index file not found. Run the tool to generate it.');
@@ -385,10 +440,13 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
 
     // Create the final structured output
     const finalOutput: CodebaseIndex = {
-      indexVersion: "1.1",
+      indexVersion: "1.2.0",
       generatedAt: new Date().toISOString(),
       repoName,
       repoPath,
+      generatedBy: "codebase-index@1.2.0",
+      ciRunId,
+      mode,
       entries: sortedIndex
     };
 
