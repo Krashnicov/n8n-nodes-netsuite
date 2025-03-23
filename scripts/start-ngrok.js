@@ -1,7 +1,8 @@
 const ngrok = require('ngrok');
 
 (async function() {
-  const token = process.env.ngrok_token;
+  // Use the provided token or get it from environment variables
+  const token = '2fpRT6LUospGnBW2Pn9Ty6ebNIe_4uBcdsdiJ31SEf8ca5keS' || process.env.ngrok_token;
   if (!token) {
     console.error('Error: ngrok_token is not defined in the environment variables.');
     process.exit(1);
