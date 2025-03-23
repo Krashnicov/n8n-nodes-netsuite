@@ -129,6 +129,9 @@ async function testRecordRetrieval() {
       query: 'SELECT id, entityid, companyName, email FROM customer WHERE rownum = 1'
     });
     
+    // Debug the raw response
+    console.log('Raw response:', response);
+    
     console.log('✅ Record retrieval successful!');
     console.log(`Status code: ${response?.status || 'Unknown'}`);
     
