@@ -145,6 +145,8 @@ async function testRecordRetrieval() {
       if (response.data.items && response.data.items.length > 0) {
         const customer = response.data.items[0];
         console.log(`✅ Found customer: ${customer.id} - ${customer.companyName || customer.entityid}`);
+        console.log('Customer details:');
+        console.log(JSON.stringify(customer, null, 2));
       } else {
         console.log('No customer records found in the response');
       }
