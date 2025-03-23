@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import ts from 'typescript';
 import glob from 'fast-glob';
+import { randomUUID } from 'crypto';
 
 // Constants
 const INDEX_PATH = path.resolve('docs/codebase-index.json');
@@ -16,6 +17,7 @@ interface IndexEntry {
   usedIn: string[];
   description: string;
   lastUpdated: string;
+  confidence: number;
 }
 
 // Output structure with top-level summary
@@ -27,6 +29,7 @@ interface CodebaseIndex {
   generatedBy: string;
   ciRunId: string;
   mode: string;
+  indexBuildId: string;
   entries: IndexEntry[];
 }
 
@@ -50,8 +53,48 @@ const inferType = (filePath: string): string => {
       filePath.endsWith('tsconfig.json') || 
       filePath.endsWith('package.json')) return 'config';
   
+  // Script files (new)
+  if (filePath.startsWith('scripts/') && (filePath.endsWith('.ts') || filePath.endsWith('.js'))) return 'script';
+  
   // Default fallback
   return 'other';
+};
+
+// Calculate confidence score based on file path and type
+const calculateConfidence = (filePath: string, fileType: string): number => {
+  // Direct path-based match: 1.0
+  if (
+    filePath.endsWith('.node.ts') ||
+    filePath.endsWith('.node.json') ||
+    filePath.endsWith('.node.options.ts') ||
+    filePath.endsWith('.node.types.ts') ||
+    filePath.endsWith('.credentials.ts')
+  ) {
+    return 1.0;
+  }
+  
+  // Content-based inference: 0.8
+  if (
+    filePath.includes('/__tests__/') ||
+    filePath.endsWith('.test.ts') ||
+    filePath.endsWith('.test.js') ||
+    (filePath.startsWith('scripts/') && (filePath.endsWith('.ts') || filePath.endsWith('.js')))
+  ) {
+    return 0.8;
+  }
+  
+  // Fallback based on extension hints: 0.5
+  if (
+    filePath.endsWith('.ts') ||
+    filePath.endsWith('.js') ||
+    filePath.endsWith('.json') ||
+    filePath.endsWith('.md')
+  ) {
+    return 0.5;
+  }
+  
+  // Unknown/default: 0.3
+  return 0.3;
 };
 
 // Extract exports from TypeScript files
@@ -124,7 +167,7 @@ const extractDescription = (filePath: string): string => {
         const comment = sourceFile.text.substring(fileComment[0].pos, fileComment[0].end);
         // Clean up comment markers and get the first meaningful line/paragraph
         const cleanComment = comment
-          .replace(/\/\*\*|\*\/|\*\s?/g, '')
+          .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '') // Remove comment symbols
           .trim()
           .split('\n')
           .map(line => line.trim())
@@ -133,7 +176,8 @@ const extractDescription = (filePath: string): string => {
           .trim();
           
         if (cleanComment.length > 0) {
-          return cleanComment;
+          // Get first sentence or truncate to 140 chars
+          return truncateDescription(cleanComment);
         }
       }
       
@@ -149,7 +193,7 @@ const extractDescription = (filePath: string): string => {
           if (nodeComment && nodeComment.length > 0) {
             description = sourceFile.text
               .substring(nodeComment[0].pos, nodeComment[0].end)
-              .replace(/\/\*\*|\*\/|\*\s?/g, '')
+              .replace(/\/\*\*|\*\/|\*\s?|\/\/\s?/g, '') // Remove comment symbols
               .trim()
               .split('\n')
               .map(line => line.trim())
@@ -160,14 +204,14 @@ const extractDescription = (filePath: string): string => {
         }
       });
       
-      if (description) return description;
+      if (description) return truncateDescription(description);
       
       // Fallback for TS/JS: First meaningful code line
       const lines = src.split('\n');
       for (const line of lines) {
         const trimmedLine = line.trim();
         if (trimmedLine && !trimmedLine.startsWith('import') && !trimmedLine.startsWith('//')) {
-          return trimmedLine.substring(0, 100) + (trimmedLine.length > 100 ? '...' : '');
+          return truncateDescription(trimmedLine);
         }
       }
     }
@@ -176,8 +220,8 @@ const extractDescription = (filePath: string): string => {
     if (ext === '.json') {
       try {
         const json = JSON.parse(src);
-        if (json.description) return json.description;
-        if (json.node && json.codexVersion) return `Node definition for ${json.node}`;
+        if (json.description) return truncateDescription(json.description);
+        if (json.node && json.codexVersion) return truncateDescription(`Node definition for ${json.node}`);
       } catch (e) {
         // Invalid JSON, continue with fallback
       }
@@ -188,22 +232,19 @@ const extractDescription = (filePath: string): string => {
       const lines = src.split('\n');
       // First heading (any level: #, ##, etc)
       const headingMatch = lines.find(line => /^#+\s/.test(line));
-      if (headingMatch) return headingMatch.replace(/^#+\s/, '');
+      if (headingMatch) return truncateDescription(headingMatch.replace(/^#+\s/, ''));
       
-      // First non-empty paragraph (up to 2 sentences)
+      // First non-empty paragraph (up to first sentence)
       let paragraph = '';
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].trim() && !lines[i].startsWith('#')) {
           paragraph += ' ' + lines[i].trim();
-          if (paragraph.includes('. ') && paragraph.split('. ').length > 2) {
-            return paragraph.split('. ').slice(0, 2).join('. ') + '.';
-          }
         } else if (paragraph) {
           // End of paragraph
-          return paragraph;
+          return truncateDescription(paragraph);
         }
       }
-      if (paragraph) return paragraph;
+      if (paragraph) return truncateDescription(paragraph);
     }
     
     // Fallback: Infer from file name and type
@@ -215,12 +256,28 @@ const extractDescription = (filePath: string): string => {
     if (fileType === 'node-options') return `UI configuration for ${fileName.split('.')[0]} node`;
     if (fileType === 'node-types') return `Type definitions for ${fileName.split('.')[0]} node`;
     if (fileType === 'test') return `Tests for ${fileName.split('.test')[0]}`;
+    if (fileType === 'script') return `Script for ${fileName.split('.')[0]}`;
     
     return `File ${fileName}`;
   } catch (error) {
     console.error(`Error extracting description from ${filePath}:`, error);
     return `File ${path.basename(filePath)}`;
   }
+};
+
+// Helper function to truncate description to first sentence or 140 chars
+const truncateDescription = (text: string): string => {
+  // Remove any extra whitespace
+  const trimmed = text.trim().replace(/\s+/g, ' ');
+  
+  // Try to get first sentence (ending with period, question mark, or exclamation)
+  const sentenceMatch = trimmed.match(/^(.*?[.!?])\s/);
+  if (sentenceMatch && sentenceMatch[1].length <= 140) {
+    return sentenceMatch[1];
+  }
+  
+  // If no sentence found or it's too long, truncate to 140 chars
+  return trimmed.length <= 140 ? trimmed : trimmed.substring(0, 137) + '...';
 };
 
 // Resolve relative imports to actual file paths
@@ -310,6 +367,8 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       
       const description = extractDescription(abs);
       
+      const confidence = calculateConfidence(file, type);
+      
       fileMap.set(file, {
         path: file,
         type,
@@ -318,6 +377,7 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
         usedIn: [], // Will populate in second pass
         description,
         lastUpdated: now,
+        confidence,
       });
     }
     
@@ -440,13 +500,14 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
 
     // Create the final structured output
     const finalOutput: CodebaseIndex = {
-      indexVersion: "1.2.0",
+      indexVersion: "1.3.0",
       generatedAt: new Date().toISOString(),
       repoName,
       repoPath,
-      generatedBy: "codebase-index@1.2.0",
+      generatedBy: "codebase-index@1.3.0",
       ciRunId,
       mode,
+      indexBuildId: randomUUID(),
       entries: sortedIndex
     };
 

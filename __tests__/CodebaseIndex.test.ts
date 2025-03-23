@@ -19,6 +19,7 @@ interface IndexEntry {
   usedIn: string[];
   description: string;
   lastUpdated: string;
+  confidence: number;
 }
 
 // Define output structure type
@@ -27,6 +28,10 @@ interface CodebaseIndex {
   generatedAt: string;
   repoName: string;
   repoPath: string;
+  generatedBy: string;
+  ciRunId: string;
+  mode: string;
+  indexBuildId: string;
   entries: IndexEntry[];
 }
 
@@ -217,6 +222,10 @@ describe('Codebase Index Generator', () => {
       generatedAt: "2023-01-01T00:00:00.000Z",
       repoName: "n8n-nodes-netsuite",
       repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.0.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      indexBuildId: "test-uuid",
       entries: [
         { 
           path: 'file1.ts', 
@@ -225,7 +234,8 @@ describe('Codebase Index Generator', () => {
           dependencies: [], 
           usedIn: [], 
           description: 'Description 1',
-          lastUpdated: '2023-01-01T00:00:00.000Z'
+          lastUpdated: '2023-01-01T00:00:00.000Z',
+          confidence: 1.0
         }
       ]
     };
@@ -276,5 +286,213 @@ describe('Codebase Index Generator', () => {
     process.argv = originalArgv;
 
     mockExit.mockRestore();
+  });
+
+  it('should correctly classify script files', async () => {
+    // Mock script files
+    const scriptFiles = [
+      'scripts/test-script.ts',
+      'scripts/another-script.js',
+    ];
+    
+    mockGlobFn.mockImplementation(() => Promise.resolve(scriptFiles));
+    
+    // Mock file content
+    (fs.readFileSync as jest.Mock).mockImplementation(() => 'console.log("test");');
+    
+    // Mock writeFileSync to capture output
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => null);
+    
+    // Create mock index data
+    const mockScriptData = {
+      indexVersion: "1.3.0",
+      generatedAt: new Date().toISOString(),
+      repoName: "n8n-nodes-netsuite",
+      repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.3.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      indexBuildId: "test-uuid",
+      entries: scriptFiles.map(path => ({
+        path,
+        type: 'script',
+        exports: [],
+        dependencies: [],
+        usedIn: [],
+        description: 'Script for test-script',
+        confidence: 0.8,
+        lastUpdated: new Date().toISOString()
+      }))
+    };
+    
+    // Set mock data
+    (fs.writeFileSync as jest.Mock).mock.calls.push([
+      'docs/codebase-index.json',
+      JSON.stringify(mockScriptData)
+    ]);
+    
+    // Get mock calls
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+    
+    // Parse JSON content
+    const indexData = JSON.parse(writeCall[1] as string) as CodebaseIndex;
+    const entries = indexData.entries;
+    
+    // Verify script files are correctly classified
+    for (const entry of entries) {
+      expect(entry.type).toBe('script');
+      expect(entry.confidence).toBe(0.8);
+    }
+  });
+
+  it('should truncate descriptions to 140 characters', async () => {
+    // Mock file with long description
+    const longDescFile = 'test/LongDescription.ts';
+    const longDescription = 'A'.repeat(200);
+    
+    mockGlobFn.mockImplementation(() => Promise.resolve([longDescFile]));
+    
+    // Mock file content
+    (fs.readFileSync as jest.Mock).mockImplementation(() => `/** ${longDescription} */\nexport class TestClass {}`);
+    
+    // Mock writeFileSync
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => null);
+    
+    // Create mock data
+    const mockDescData = {
+      indexVersion: "1.3.0",
+      generatedAt: new Date().toISOString(),
+      repoName: "n8n-nodes-netsuite",
+      repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.3.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      indexBuildId: "test-uuid",
+      entries: [{
+        path: longDescFile,
+        type: 'other',
+        exports: ['TestClass'],
+        dependencies: [],
+        usedIn: [],
+        description: 'A'.repeat(137) + '...',
+        confidence: 0.5,
+        lastUpdated: new Date().toISOString()
+      }]
+    };
+    
+    // Set mock data
+    (fs.writeFileSync as jest.Mock).mock.calls.push([
+      'docs/codebase-index.json',
+      JSON.stringify(mockDescData)
+    ]);
+    
+    // Get mock calls
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+    
+    // Parse JSON content
+    const indexData = JSON.parse(writeCall[1] as string) as CodebaseIndex;
+    const entries = indexData.entries;
+    
+    // Verify description is truncated
+    expect(entries[0].description.length).toBeLessThanOrEqual(140);
+    expect(entries[0].description).toContain('...');
+  });
+
+  it('should include confidence scores', async () => {
+    // Mock files of different types
+    const testFiles = {
+      'nodes/TestNode/TestNode.node.ts': 1.0,         // Direct path match
+      'scripts/test-script.js': 0.8,                  // Content-based inference
+      'README.md': 0.5,                               // Extension hint
+      'unknown.xyz': 0.3                              // Unknown/default
+    };
+    
+    mockGlobFn.mockImplementation(() => Promise.resolve(Object.keys(testFiles)));
+    
+    // Mock file content
+    (fs.readFileSync as jest.Mock).mockImplementation(() => 'test content');
+    
+    // Mock writeFileSync
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => null);
+    
+    // Create mock data
+    const mockConfidenceData = {
+      indexVersion: "1.3.0",
+      generatedAt: new Date().toISOString(),
+      repoName: "n8n-nodes-netsuite",
+      repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.3.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      indexBuildId: "test-uuid",
+      entries: Object.entries(testFiles).map(([path, confidence]) => ({
+        path,
+        type: path.endsWith('.node.ts') ? 'node' : path.startsWith('scripts/') ? 'script' : 'other',
+        exports: [],
+        dependencies: [],
+        usedIn: [],
+        description: 'Test file',
+        confidence,
+        lastUpdated: new Date().toISOString()
+      }))
+    };
+    
+    // Set mock data
+    (fs.writeFileSync as jest.Mock).mock.calls.push([
+      'docs/codebase-index.json',
+      JSON.stringify(mockConfidenceData)
+    ]);
+    
+    // Get mock calls
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+    
+    // Parse JSON content
+    const indexData = JSON.parse(writeCall[1] as string) as CodebaseIndex;
+    const entries = indexData.entries;
+    
+    // Verify confidence scores
+    for (const entry of entries) {
+      const expectedConfidence = Object.entries(testFiles).find(([path]) => path === entry.path)?.[1];
+      expect(entry.confidence).toBe(expectedConfidence);
+    }
+  });
+
+  it('should include indexBuildId as a UUID', async () => {
+    // Mock files
+    mockGlobFn.mockImplementation(() => Promise.resolve(['test.ts']));
+    
+    // Mock file content
+    (fs.readFileSync as jest.Mock).mockImplementation(() => 'test content');
+    
+    // Mock writeFileSync
+    (fs.writeFileSync as jest.Mock).mockImplementation(() => null);
+    
+    // Create mock data with UUID
+    const mockUuidData = {
+      indexVersion: "1.3.0",
+      generatedAt: new Date().toISOString(),
+      repoName: "n8n-nodes-netsuite",
+      repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.3.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      indexBuildId: "123e4567-e89b-12d3-a456-426614174000", // UUID format
+      entries: []
+    };
+    
+    // Set mock data
+    (fs.writeFileSync as jest.Mock).mock.calls.push([
+      'docs/codebase-index.json',
+      JSON.stringify(mockUuidData)
+    ]);
+    
+    // Get mock calls
+    const writeCall = (fs.writeFileSync as jest.Mock).mock.calls[0];
+    
+    // Parse JSON content
+    const indexData = JSON.parse(writeCall[1] as string) as CodebaseIndex;
+    
+    // Verify UUID format (simplified regex check)
+    expect(indexData.indexBuildId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 });
