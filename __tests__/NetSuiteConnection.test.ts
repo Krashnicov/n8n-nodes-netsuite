@@ -44,6 +44,13 @@ describe('NetSuite Connection', () => {
     });
 
     // Method 2: Actual API call to verify connection
+    // TODO: There appears to be a 401 issue in CI environment with OAuth 1.0a auth.
+    // This is likely due to credential configuration differences between environments.
+    // To debug:
+    // 1. Check that all environment variables are correctly set (case-sensitive)
+    // 2. Verify NetSuite account permissions for the integration record
+    // 3. Test locally with known working credentials first
+    // 4. Look for authentication header responses which often contain error details
     itifOAuth1('should successfully connect to NetSuite API with OAuth 1.0a', async () => {
       // Configure credentials from environment variables
       const hostname = process.env.netsuite_hostname || 'suitetalk.api.netsuite.com';

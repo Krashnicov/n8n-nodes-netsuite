@@ -5,12 +5,20 @@
  * 
  * This script tests the NetSuite node implementation using OAuth 1.0a authentication
  * which has been confirmed to work with the NetSuite API.
+ * 
+ * This script serves as both a standalone test and a reference implementation
+ * for the NetSuite node's OAuth 1.0a authentication flow.
  */
 
 // Import required modules
 const { makeRequest } = require('@fye/netsuite-rest-api');
 const fs = require('fs');
 const path = require('path');
+
+// Authentication banner
+console.log('🔐 Using OAuth 1.0a credentials for NetSuite connection test...');
+console.log('This test verifies that OAuth 1.0a authentication works with the NetSuite API.');
+console.log('It also validates that customer search returns expected data structure.');
 
 // Check for required environment variables
 const requiredEnvVars = [
@@ -27,6 +35,8 @@ if (missingEnvVars.length > 0) {
   missingEnvVars.forEach(envVar => console.error(`  - ${envVar}`));
   console.error('\nPlease set these environment variables and try again.');
   process.exit(1);
+} else {
+  console.log('✅ All required NetSuite OAuth 1.0a environment variables are set');
 }
 
 // Configuration from environment variables with EXACT parameter names
@@ -110,11 +120,11 @@ async function testRecordRetrieval() {
     console.log('\n🧪 Testing record retrieval with OAuth 1.0a...');
     
     // Make API request using makeRequest from @fye/netsuite-rest-api
-    // Use SuiteQL to get exactly one customer record
+    // Use SuiteQL to get exactly one customer record with required fields
     const response = await makeRequest(config, {
       method: 'POST',
       requestType: 'suiteql',
-      query: 'SELECT id, companyName FROM customer WHERE rownum = 1'
+      query: 'SELECT id, entityid, companyName, email FROM customer WHERE rownum = 1'
     });
     
     console.log('✅ Record retrieval successful!');
@@ -128,13 +138,34 @@ async function testRecordRetrieval() {
         hasMore: response.data.hasMore,
         itemsLength: response.data.items ? response.data.items.length : 0
       });
+      
+      // Display customer data if available
+      if (response.data.items && response.data.items.length > 0) {
+        const customer = response.data.items[0];
+        console.log(`✅ Found customer: ${customer.id} - ${customer.companyName || customer.entityid}`);
+      } else {
+        console.log('No customer records found in the response');
+      }
     }
     
-    // Since the response structure doesn't match what we expected,
-    // we'll modify our test to simply check that we got a successful response
-    // This confirms OAuth 1.0a authentication is working
+    // Validate that we got a response
     if (!response) {
       throw new Error('Expected a response from the NetSuite API');
+    }
+    
+    // Validate that the customer record has the expected fields
+    if (response.data && response.data.items && response.data.items.length > 0) {
+      const customer = response.data.items[0];
+      const requiredFields = ['id', 'companyName'];
+      const missingFields = requiredFields.filter(field => !customer[field]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Customer record is missing required fields: ${missingFields.join(', ')}`);
+      }
+      
+      console.log('✅ Validation passed: Customer record contains all required fields');
+    } else if (response.data && response.data.items) {
+      throw new Error('Expected at least one customer record in response');
     }
     
     // For the purpose of this test, we'll consider a successful API call as validation
