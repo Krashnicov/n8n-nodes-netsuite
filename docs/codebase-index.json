@@ -11,7 +11,7 @@
     ],
     "usedIn": [],
     "description": "// Define test file types for type safety",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "__tests__/NetSuite.node.test.ts",
@@ -24,7 +24,7 @@
     ],
     "usedIn": [],
     "description": "Tests for NetSuite.node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "__tests__/NetSuiteConnection.test.ts",
@@ -37,7 +37,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "__tests__/OAuth2Authentication.test.ts",
@@ -49,7 +49,7 @@
     ],
     "usedIn": [],
     "description": "Tests for OAuth2Authentication",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "__tests__/OAuth2Flow.test.ts",
@@ -60,7 +60,7 @@
     ],
     "usedIn": [],
     "description": "Tests for OAuth2Flow",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "__tests__/OAuth2Helper.test.ts",
@@ -72,7 +72,7 @@
     ],
     "usedIn": [],
     "description": "Tests for OAuth2Helper",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": ".eslintrc.jest.js",
@@ -81,7 +81,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File .eslintrc.jest.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": ".eslintrc.js",
@@ -90,7 +90,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "@type {import('@types/eslint').ESLint.ConfigData}\n @note Using legacy .eslintrc.js format with ESLint 9.x (requires ESLINT_USE_FLAT_CONFIG=false)",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": ".github/ISSUE_TEMPLATE/netsuite-credential-verification.md",
@@ -99,34 +99,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "---",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
-  },
-  {
-    "path": "coverage/lcov-report/block-navigation.js",
-    "type": "other",
-    "exports": [],
-    "dependencies": [],
-    "usedIn": [],
-    "description": "/eslint-disable",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
-  },
-  {
-    "path": "coverage/lcov-report/prettify.js",
-    "type": "other",
-    "exports": [],
-    "dependencies": [],
-    "usedIn": [],
-    "description": "/eslint-disable",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
-  },
-  {
-    "path": "coverage/lcov-report/sorter.js",
-    "type": "other",
-    "exports": [],
-    "dependencies": [],
-    "usedIn": [],
-    "description": "/eslint-disable",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "credentials/__tests__/NetSuite.credentials.test.ts",
@@ -137,7 +110,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "credentials/NetSuite.credentials.ts",
@@ -150,7 +123,7 @@
     ],
     "usedIn": [],
     "description": "Credential definition for NetSuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "credentials/NetSuiteOAuth2Api.credentials.ts",
@@ -163,7 +136,7 @@
     ],
     "usedIn": [],
     "description": "Credential definition for NetSuiteOAuth2Api",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/API_DOCS.md",
@@ -172,7 +145,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node for n8n - API Documentation",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/ARCHITECTURE.md",
@@ -181,7 +154,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node Architecture",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/codebase-index.json",
@@ -190,7 +163,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File codebase-index.json",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/CONFIGURATION.md",
@@ -199,7 +172,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node Configuration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/INTERNAL_API_DOCS.md",
@@ -208,7 +181,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node - Internal API Documentation",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/LOCAL_DEVELOPMENT.md",
@@ -217,7 +190,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Local Development with ngrok Tunneling",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/maintenance/dependency-patching.md",
@@ -226,7 +199,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Dependency Patching",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/MODULE_CONFIGURATION.md",
@@ -235,7 +208,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Module Configuration for n8n-nodes-netsuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/NETSUITE_CONNECTION.md",
@@ -244,7 +217,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Testing NetSuite Connection",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/OAUTH2_IMPLEMENTATION.md",
@@ -253,7 +226,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "OAuth 2.0 Implementation for NetSuite Node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/OAUTH2_SETUP.md",
@@ -262,7 +235,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite OAuth 2.0 Authentication Setup",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/OAUTH2_TESTING.md",
@@ -271,7 +244,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Testing OAuth 2.0 Authentication for NetSuite Node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/OPERATIONS.md",
@@ -280,7 +253,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node Operations",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/PR_INSTRUCTIONS.md",
@@ -289,7 +262,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Pull Request Instructions for n8n-nodes-netsuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/ROADMAP.md",
@@ -298,7 +271,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node - Current Issues & Roadmap",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/STYLE_GUIDE.md",
@@ -307,7 +280,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Documentation Style Guide",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/test-results/ENDPOINT_CONNECTIVITY_TEST.md",
@@ -316,7 +289,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Endpoint Connectivity Test Results",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/test-results/workflows/NetSuite_Endpoint_Connectivity_Test.json",
@@ -325,7 +298,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File NetSuite_Endpoint_Connectivity_Test.json",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/TESTING.md",
@@ -334,7 +307,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Testing Guidelines for n8n-nodes-netsuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "docs/USER_GUIDE.md",
@@ -343,7 +316,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node for n8n - User Guide",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "eslint.config.js",
@@ -358,7 +331,7 @@
     ],
     "usedIn": [],
     "description": "File eslint.config.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "gulpfile.js",
@@ -369,7 +342,7 @@
     ],
     "usedIn": [],
     "description": "File gulpfile.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "jest.config.js",
@@ -378,7 +351,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "// jest.config.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "LICENSE.md",
@@ -387,7 +360,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "MIT License",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/__mocks__/p-limit.ts",
@@ -398,7 +371,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "// Mock implementation of p-limit",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/helpers/testHelpers.ts",
@@ -420,7 +393,7 @@
       "nodes/NetSuite/__tests__/utils.test.ts"
     ],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/NetSuite.node.list.test.ts",
@@ -433,7 +406,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/NetSuite.node.operations.test.ts",
@@ -446,7 +419,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/NetSuite.node.test.ts",
@@ -459,7 +432,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/__tests__/utils.test.ts",
@@ -472,7 +445,7 @@
     ],
     "usedIn": [],
     "description": "/eslint-env jest, node",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/NetSuite.node.json",
@@ -481,7 +454,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Node definition for n8n-nodes-netsuite.netsuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/NetSuite.node.options.ts",
@@ -494,7 +467,7 @@
     ],
     "usedIn": [],
     "description": "Main node logic for NetSuite integration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/NetSuite.node.ts",
@@ -513,7 +486,7 @@
     ],
     "usedIn": [],
     "description": "Main node logic for NetSuite integration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/NetSuite.node.types.ts",
@@ -534,7 +507,7 @@
     ],
     "usedIn": [],
     "description": "Main node logic for NetSuite integration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/OAuth2Helper.ts",
@@ -564,7 +537,7 @@
       "nodes/NetSuite/NetSuite.node.ts"
     ],
     "description": "Main node logic for OAuth2Helper integration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "nodes/NetSuite/types.d.ts",
@@ -573,7 +546,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Main node logic for types integration",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "package.json",
@@ -582,7 +555,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "n8n node for NetSuite using the REST API",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "patches/README.md",
@@ -591,7 +564,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Patches",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "PR_DESCRIPTION.md",
@@ -600,7 +573,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite OAuth Authentication Implementation",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "README.md",
@@ -609,7 +582,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "n8n-nodes-netsuite",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/__tests__/start-ngrok.test.js",
@@ -618,7 +591,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Tests for start-ngrok",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/gen-codebase-index.ts",
@@ -632,7 +605,7 @@
     ],
     "usedIn": [],
     "description": "// Index entry type definition",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/oauth2-callback-server.js",
@@ -641,7 +614,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File oauth2-callback-server.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/start-ngrok.js",
@@ -650,7 +623,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File start-ngrok.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-combined-authentication.js",
@@ -659,7 +632,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Combined Authentication Test\n \n This script tests both OAuth 1.0a and OAuth 2.0 authentication methods\n for the NetSuite API to determine which one works reliably.",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-netsuite-connection.js",
@@ -668,7 +641,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Test script to verify NetSuite connection\n Run with: node scripts/test-netsuite-connection.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-netsuite-node-with-oauth1.js",
@@ -677,7 +650,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite Node Test with OAuth 1.0a Authentication\n \n This script tests the NetSuite node implementation using OAuth 1.0a authentication\n which has been confirmed to work with the NetSuite API.",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-oauth1-implementation.js",
@@ -686,7 +659,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite OAuth 1.0a Implementation Test\n \n This script tests the implementation of OAuth 1.0a authentication\n for the NetSuite node in n8n-nodes-netsuite.",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-oauth1-with-correct-library-parameters.js",
@@ -695,7 +668,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite OAuth 1.0a Authentication Test with Correct Library Parameters\n \n This script tests the NetSuite API using OAuth 1.0a authentication\n with the @fye/netsuite-rest-api library, using the EXACT parameter\n names as expected by the library's validateRequestConfig function.",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-oauth2-token-retrieval.js",
@@ -704,7 +677,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Test script for OAuth2 token retrieval\n \n This script tests the OAuth2 token retrieval process for NetSuite\n It uses the OAuth2 callback server to simulate the OAuth2 flow",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-oauth2-with-existing-credentials.js",
@@ -713,7 +686,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Test script for OAuth2 authentication with NetSuite using existing credentials\n \n This script tests the OAuth2 authentication flow with NetSuite using the existing\n OAuth 1.0a credentials (consumer key/secret) as the OAuth 2.0 client ID/secret.\n \n Based on NetSuite documentation:\n https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_158074210415.html\n \n Usage:\n 1. Set the required environment variables:\n    - netsuite_consumerKey (used as client_id)\n    - netsuite_consumerSecret (used as client_secret)\n    - netsuite_account_id\n    - ngrok_domain\n 2. Run the script: node test-oauth2-with-existing-credentials.js",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "scripts/test-oauth2-with-jwt-bearer-simplified.js",
@@ -722,7 +695,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "NetSuite OAuth2 Test with JWT Bearer Token - Simplified Version\n \n This script tests the NetSuite API using OAuth 2.0 client credentials flow\n with a JWT bearer token as required by NetSuite, using a simplified approach.",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "TESTING.md",
@@ -731,7 +704,7 @@
     "dependencies": [],
     "usedIn": [],
     "description": "Testing Guidelines",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   },
   {
     "path": "tsconfig.json",
@@ -740,6 +713,6 @@
     "dependencies": [],
     "usedIn": [],
     "description": "File tsconfig.json",
-    "lastUpdated": "2025-03-23T01:26:25.498Z"
+    "lastUpdated": "2025-03-23T01:27:00.889Z"
   }
 ]

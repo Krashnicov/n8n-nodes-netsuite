@@ -5,7 +5,7 @@ import glob from 'fast-glob';
 
 // Constants
 const INDEX_PATH = path.resolve('docs/codebase-index.json');
-const IGNORE = ['node_modules/**', 'dist/**', 'tmp/**', 'cache/**', '.git/**', '.DS_Store'];
+const IGNORE = ['node_modules/**', 'dist/**', 'tmp/**', 'cache/**', '.git/**', '.DS_Store', 'coverage/**', 'pnpm-lock.yaml'];
 
 // Index entry type definition
 interface IndexEntry {
