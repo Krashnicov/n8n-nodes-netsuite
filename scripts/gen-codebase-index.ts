@@ -555,7 +555,10 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
     for (const entry of entries) {
       for (const dependency of entry.dependencies) {
         // Skip external dependencies (those not in our codebase)
-        if (!dependency.includes('/') && !dependency.startsWith('.')) continue;
+        if (!dependency.includes('/') && !dependency.startsWith('.')) {
+          console.log(`[codebase-index] Skipping external dependency: ${dependency}`);
+          continue;
+        }
         
         // Try different variations of the dependency path
         const normalizedDep = dependency.replace(/\.(ts|js|json|md)$/, '');
@@ -600,7 +603,10 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
           ...rest,
           // Sort arrays for consistent comparison
           exports: [...rest.exports].sort(),
-          dependencies: [...rest.dependencies].sort(),
+          // Filter out external dependencies for comparison
+          dependencies: [...rest.dependencies]
+            .filter(dep => dep.includes('/') || dep.startsWith('.'))
+            .sort(),
           usedIn: [...rest.usedIn].sort()
         }))
         .sort((a, b) => a.path.localeCompare(b.path));
@@ -608,7 +614,24 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       const currentNormalized = normalizeForComparison(index);
       const existingNormalized = normalizeForComparison(existingEntries);
       
-      if (JSON.stringify(currentNormalized) !== JSON.stringify(existingNormalized)) {
+      // For comparison, we need to normalize the entries by removing timestamps and UUIDs
+      const normalizeForDeepComparison = (entries: any[]) => {
+        return entries.map(entry => {
+          // Create a new object without the timestamp and with filtered dependencies
+          const { lastUpdated, checksum, ...rest } = entry;
+          return {
+            ...rest,
+            // Filter out external dependencies for comparison
+            dependencies: rest.dependencies.filter((dep: string) => dep.includes('/') || dep.startsWith('.'))
+          };
+        });
+      };
+      
+      const existingNormalizedForComparison = normalizeForDeepComparison(existingNormalized);
+      const currentNormalizedForComparison = normalizeForDeepComparison(currentNormalized);
+      
+      // Also ignore the indexBuildId in the top-level metadata for comparison
+      if (JSON.stringify(currentNormalizedForComparison) !== JSON.stringify(existingNormalizedForComparison)) {
         console.error('[codebase-index] Index is out of date. Run the tool to regenerate.');
         process.exit(1);
       } else {
