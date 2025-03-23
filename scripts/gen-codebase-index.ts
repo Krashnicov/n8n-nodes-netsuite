@@ -18,18 +18,30 @@ interface IndexEntry {
   lastUpdated: string;
 }
 
+// Output structure with top-level summary
+interface CodebaseIndex {
+  indexVersion: string;
+  generatedAt: string;
+  repoName: string;
+  repoPath: string;
+  entries: IndexEntry[];
+}
+
 // File type inference based on path and content
 const inferType = (filePath: string): string => {
-  if (filePath.includes('/nodes/')) return 'node';
-  if (filePath.includes('/credentials/')) return 'credential';
+  if (filePath.includes('/nodes/') && filePath.endsWith('.node.ts')) return 'node';
+  if (filePath.includes('/nodes/') && filePath.endsWith('options.ts')) return 'node-options';
+  if (filePath.includes('/nodes/') && filePath.endsWith('types.ts')) return 'node-types';
+  if (filePath.includes('/credentials/') && filePath.endsWith('.ts')) return 'credential';
   if (filePath.endsWith('.node.json')) return 'codex';
-  if (filePath.includes('/docs/')) return 'doc';
-  if (filePath.includes('/test/') || filePath.includes('/__tests__/')) return 'test';
+  if (filePath.includes('/__tests__/') || filePath.includes('.test.')) return 'test';
+  if (filePath.includes('/docs/') && filePath.endsWith('.md')) return 'doc';
+  if (filePath.includes('/scripts/') && (filePath.endsWith('.js') || filePath.endsWith('.ts'))) return 'script';
   
-  // More specific subtypes
-  if (filePath.endsWith('.node.options.ts')) return 'node-options';
-  if (filePath.endsWith('.node.types.ts')) return 'node-types';
-  if (filePath.includes('/scripts/')) return 'script';
+  // Config files
+  if (filePath.includes('gulpfile') || 
+      filePath.includes('jest.config') || 
+      filePath.includes('.eslintrc')) return 'config';
   
   return 'other';
 };
@@ -94,30 +106,62 @@ const extractDescription = (filePath: string): string => {
     const ext = path.extname(filePath);
     const src = fs.readFileSync(filePath, 'utf-8');
     
-    // For TypeScript files, try to extract from JSDoc comments
-    if (['.ts', '.js'].includes(ext)) {
+    // For TypeScript files, try to extract from JSDoc comments first
+    if (['.ts', '.js', '.json'].includes(ext)) {
       const sourceFile = ts.createSourceFile(filePath, src, ts.ScriptTarget.ES2015, true);
-      const fileComment = ts.getLeadingCommentRanges(sourceFile.text, 0);
       
+      // Try to find top-of-file block comment
+      const fileComment = ts.getLeadingCommentRanges(sourceFile.text, 0);
       if (fileComment && fileComment.length > 0) {
         const comment = sourceFile.text.substring(fileComment[0].pos, fileComment[0].end);
-        // Clean up comment markers
-        return comment.replace(/\/\*\*|\*\/|\*\s?/g, '').trim();
+        // Clean up comment markers and get the first meaningful line/paragraph
+        const cleanComment = comment
+          .replace(/\/\*\*|\*\/|\*\s?/g, '')
+          .trim()
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .join(' ')
+          .trim();
+          
+        if (cleanComment.length > 0) {
+          return cleanComment;
+        }
       }
       
-      // Look for class/interface descriptions
+      // Look for class/interface/function descriptions via JSDoc
       let description = '';
       sourceFile.forEachChild((node) => {
-        if (!description && (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.name) {
+        if (!description && 
+            (ts.isClassDeclaration(node) || 
+             ts.isInterfaceDeclaration(node) || 
+             ts.isFunctionDeclaration(node)) && 
+            node.name) {
           const nodeComment = ts.getLeadingCommentRanges(sourceFile.text, node.pos);
           if (nodeComment && nodeComment.length > 0) {
-            description = sourceFile.text.substring(nodeComment[0].pos, nodeComment[0].end)
-              .replace(/\/\*\*|\*\/|\*\s?/g, '').trim();
+            description = sourceFile.text
+              .substring(nodeComment[0].pos, nodeComment[0].end)
+              .replace(/\/\*\*|\*\/|\*\s?/g, '')
+              .trim()
+              .split('\n')
+              .map(line => line.trim())
+              .filter(line => line.length > 0)
+              .join(' ')
+              .trim();
           }
         }
       });
       
       if (description) return description;
+      
+      // Fallback for TS/JS: First meaningful code line
+      const lines = src.split('\n');
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine && !trimmedLine.startsWith('import') && !trimmedLine.startsWith('//')) {
+          return trimmedLine.substring(0, 100) + (trimmedLine.length > 100 ? '...' : '');
+        }
+      }
     }
     
     // For JSON files, look for description field
@@ -138,12 +182,20 @@ const extractDescription = (filePath: string): string => {
       const headingMatch = lines.find(line => line.startsWith('# '));
       if (headingMatch) return headingMatch.replace('# ', '');
       
-      // First non-empty paragraph
+      // First non-empty paragraph (up to 2 sentences)
+      let paragraph = '';
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].trim() && !lines[i].startsWith('#')) {
-          return lines[i].trim();
+          paragraph += ' ' + lines[i].trim();
+          if (paragraph.includes('. ') && paragraph.split('. ').length > 2) {
+            return paragraph.split('. ').slice(0, 2).join('. ') + '.';
+          }
+        } else if (paragraph) {
+          // End of paragraph
+          return paragraph;
         }
       }
+      if (paragraph) return paragraph;
     }
     
     // Fallback: Infer from file name and type
@@ -191,6 +243,34 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
   return null; // External package
 };
 
+// Normalize dependencies to remove duplicates and standardize paths
+const normalizeDependencies = (dependencies: string[], currentFilePath: string): string[] => {
+  const normalizedDeps: string[] = [];
+  const depSet = new Set<string>();
+  
+  for (const dep of dependencies) {
+    // Skip empty dependencies
+    if (!dep.trim()) continue;
+    
+    // Try to resolve relative paths
+    let resolvedDep = dep;
+    if (dep.startsWith('.')) {
+      const resolvedPath = resolveRelativePath(dep, currentFilePath);
+      if (resolvedPath) {
+        resolvedDep = path.relative(process.cwd(), resolvedPath).replace(/\\/g, '/');
+      }
+    }
+    
+    // Add to set to deduplicate
+    if (!depSet.has(resolvedDep)) {
+      depSet.add(resolvedDep);
+      normalizedDeps.push(resolvedDep);
+    }
+  }
+  
+  return normalizedDeps.sort(); // Sort for consistent output
+};
+
 // Main function
 (async () => {
   try {
@@ -216,6 +296,8 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       if (['.ts', '.js'].includes(ext)) {
         exports = extractExports(abs);
         dependencies = extractDependencies(abs);
+        // Normalize and dedupe dependencies
+        dependencies = normalizeDependencies(dependencies, abs);
       }
       
       const description = extractDescription(abs);
@@ -263,6 +345,9 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       
       const existing = JSON.parse(fs.readFileSync(INDEX_PATH, 'utf-8'));
       
+      // Extract entries array from the existing index (if it's the new format)
+      const existingEntries = existing.entries || existing;
+      
       // Compare without timestamps to avoid false positives
       const normalizeForComparison = (entries: IndexEntry[]) => 
         entries.map(({lastUpdated, ...rest}) => ({
@@ -275,7 +360,7 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
         .sort((a, b) => a.path.localeCompare(b.path));
       
       const currentNormalized = normalizeForComparison(index);
-      const existingNormalized = normalizeForComparison(existing);
+      const existingNormalized = normalizeForComparison(existingEntries);
       
       if (JSON.stringify(currentNormalized) !== JSON.stringify(existingNormalized)) {
         console.error('[codebase-index] Index is out of date. Run the tool to regenerate.');
@@ -286,15 +371,28 @@ const resolveRelativePath = (importPath: string, currentFilePath: string): strin
       }
     }
     
-    // Write output - ensure arrays are sorted for consistency
+    // Write output with top-level summary structure
     const sortedIndex = index.map(entry => ({
       ...entry,
       exports: [...entry.exports].sort(),
       dependencies: [...entry.dependencies].sort(),
       usedIn: [...entry.usedIn].sort()
     }));
-    
-    fs.writeFileSync(INDEX_PATH, JSON.stringify(sortedIndex, null, 2));
+
+    // Get repository info
+    const repoName = path.basename(process.cwd());
+    const repoPath = process.cwd();
+
+    // Create the final structured output
+    const finalOutput: CodebaseIndex = {
+      indexVersion: "1.1",
+      generatedAt: new Date().toISOString(),
+      repoName,
+      repoPath,
+      entries: sortedIndex
+    };
+
+    fs.writeFileSync(INDEX_PATH, JSON.stringify(finalOutput, null, 2));
     console.log(`[codebase-index] Wrote ${index.length} entries to ${INDEX_PATH}`);
   } catch (error) {
     console.error('[codebase-index] Error:', error);
