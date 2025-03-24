@@ -44,6 +44,7 @@ interface CodebaseIndex {
   generatedBy: string;
   ciRunId: string;
   mode: string;
+  sourceBranch: string; // Added for tracking source branch
   indexBuildId: string;
   entries: IndexEntry[];
 }
@@ -113,6 +114,11 @@ describe('Codebase Index Generator', () => {
       generatedAt: new Date().toISOString(),
       repoName: "n8n-nodes-netsuite",
       repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.1.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      sourceBranch: "main", // Add source branch field
+      indexBuildId: "test-uuid",
       entries: Object.keys(testFiles).map(path => ({
         path,
         type: testFiles[path],
@@ -178,6 +184,11 @@ describe('Codebase Index Generator', () => {
       generatedAt: new Date().toISOString(),
       repoName: "n8n-nodes-netsuite",
       repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.1.0",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      sourceBranch: "main", // Add source branch field
+      indexBuildId: "test-uuid",
       entries: [{
         path: filePath,
         type: 'other',
@@ -238,6 +249,7 @@ describe('Codebase Index Generator', () => {
       generatedBy: "codebase-index@1.0.0",
       ciRunId: "test-ci-run",
       mode: "test",
+      sourceBranch: "main", // Add source branch field
       indexBuildId: "test-uuid",
       entries: [
         { 
@@ -325,6 +337,7 @@ describe('Codebase Index Generator', () => {
       generatedBy: "codebase-index@1.3.0",
       ciRunId: "test-ci-run",
       mode: "test",
+      sourceBranch: "main", // Add source branch field
       indexBuildId: "test-uuid",
       entries: scriptFiles.map(path => ({
         path,
@@ -387,6 +400,7 @@ describe('Codebase Index Generator', () => {
       generatedBy: "codebase-index@1.3.1",
       ciRunId: "test-ci-run",
       mode: "test",
+      sourceBranch: "main", // Add source branch field
       indexBuildId: "test-uuid",
       entries: poorDescFiles.map(file => ({
         path: file.path,
@@ -501,6 +515,7 @@ describe('Codebase Index Generator', () => {
       generatedBy: "codebase-index@1.3.1",
       ciRunId: "test-ci-run",
       mode: "test",
+      sourceBranch: "main", // Add source branch field
       indexBuildId: "test-uuid",
       entries: [
         {
@@ -581,6 +596,11 @@ describe('Codebase Index Generator', () => {
       generatedAt: new Date().toISOString(),
       repoName: "n8n-nodes-netsuite",
       repoPath: "/home/ubuntu/repos/n8n-nodes-netsuite",
+      generatedBy: "codebase-index@1.3.1",
+      ciRunId: "test-ci-run",
+      mode: "test",
+      sourceBranch: "main", // Add source branch field
+      indexBuildId: "test-uuid",
       entries: [{
         path: 'test/EnvVars.js',
         type: 'other',
