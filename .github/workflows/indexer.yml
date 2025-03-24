@@ -17,12 +17,7 @@ on:
 
 jobs:
   generate-index:
-    # Only run if it's a branch creation event or a PR merge or a push to main
-    if: |
-      (github.event_name == 'create' && github.event.ref_type == 'branch') ||
-      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    
+    # Run on all PR events, branch creation events, PR merges, and pushes to main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
