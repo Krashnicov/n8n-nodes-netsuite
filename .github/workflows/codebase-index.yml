@@ -1,4 +1,4 @@
-name: Codebase Index Generator
+name: Codebase Index
 
 on:
   # Trigger on branch creation
@@ -6,9 +6,8 @@ on:
     branches:
       - '**'
   
-  # Trigger on pull request events (including merges)
+  # Trigger on pull request events
   pull_request:
-    types: [opened, synchronize, reopened, closed]
     branches: [ main ]
   
   # Trigger on push to main branch
@@ -16,11 +15,12 @@ on:
     branches: [ main ]
 
 jobs:
-  generate-index:
-    # Run on all PR events, branch creation events, PR merges, and pushes to main
+  codebase-index:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -59,11 +59,35 @@ jobs:
             echo "CI_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           fi
       
+      - name: Determine file changes
+        id: changed_files
+        uses: tj-actions/changed-files@v37
+        with:
+          files: |
+            scripts/gen-codebase-index.ts
+            docs/codebase-index.json
+            
+      - name: Validate codebase index if relevant files changed
+        if: steps.changed_files.outputs.any_changed == 'true'
+        run: |
+          echo "Validating codebase index..."
+          pnpm codebase-index --check
+          
       - name: Generate codebase index
+        # Generate on branch creation, PR merge, or push to main
+        if: |
+          (github.event_name == 'create' && github.event.ref_type == 'branch') ||
+          (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: |
           pnpm codebase-index
           
       - name: Commit and push changes if needed
+        # Only commit changes when needed
+        if: |
+          ((github.event_name == 'create' && github.event.ref_type == 'branch') ||
+          (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/main'))
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: update codebase index [skip ci]"
