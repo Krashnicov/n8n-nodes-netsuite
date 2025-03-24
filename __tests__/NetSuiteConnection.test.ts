@@ -91,11 +91,16 @@ describe('NetSuite Connection', () => {
         console.log(`Response status: ${response.statusCode}`);
         console.log(`Response includes data:`, !!response.body);
         
-        console.log('✅ Successfully connected to NetSuite!');
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toBeDefined();
-        
-        return response;
+        // We require a 200 status code for successful authentication
+        if (response.statusCode === 200) {
+          console.log('✅ Successfully connected to NetSuite!');
+          expect(response.statusCode).toBe(200);
+          expect(response.body).toBeDefined();
+          return response;
+        } else {
+          // If we get a non-200 response, that's a failure
+          throw new Error(`Expected 200 status code but received ${response.statusCode}`);
+        }
       } catch (error: any) { // Type assertion for error handling
         console.error('❌ Connection validation completed with authentication error:');
         
@@ -121,14 +126,17 @@ describe('NetSuite Connection', () => {
           if (authHeader.includes('token_rejected')) {
             console.warn('⚠️ Test skipped due to token_rejected error - this is an expected behavior in some environments');
             console.warn('Authentication header:', authHeader);
-            return;
+            // Skip the test but mark it as a known issue
+            console.warn('⚠️ KNOWN ISSUE: Authentication is failing with token_rejected error');
+            // We're skipping this test but still failing it since we need 200 responses
+            throw new Error('Authentication failed with token_rejected error - 200 status code required');
           }
         } else {
           console.error(error);
         }
         
         // Throw error for unexpected failures
-        throw new Error(`Failed to connect to NetSuite API: ${error.message}`);
+        throw new Error(`Failed to connect to NetSuite API: Expected 200 status code but received ${error.response?.statusCode || 'unknown error'}`);
       }
     });
     // New test to validate error handling for token_rejected errors
@@ -174,9 +182,17 @@ describe('NetSuite Connection', () => {
         console.log('✅ Successfully connected to NetSuite!');
         console.log(`Response status: ${response.statusCode}`);
         
-        expect(response.statusCode).toBe(200);
+        // We require a 200 status code for successful authentication
+        if (response.statusCode === 200) {
+          expect(response.statusCode).toBe(200);
+          expect(response.body).toBeDefined();
+          return response;
+        } else {
+          // If we get a non-200 response, that's a failure
+          throw new Error(`Expected 200 status code but received ${response.statusCode}`);
+        }
       } catch (error: any) {
-        // Specifically check for token_rejected errors which we expect to handle gracefully
+        // This test is specifically for token_rejected errors, so we'll handle those differently
         if (error.response && error.response.statusCode === 401) {
           const authHeader = error.response.headers['www-authenticate'] || '';
           console.log('Authentication header:', authHeader);
@@ -184,18 +200,15 @@ describe('NetSuite Connection', () => {
           if (authHeader.includes('token_rejected')) {
             console.log('⚠️ Detected token_rejected error - validating error handling behavior');
             
-            // Validate error contains expected properties
-            expect(error.response.statusCode).toBe(401);
-            expect(authHeader).toContain('token_rejected');
-            // Test passes if we correctly detect the token_rejected error
-            return;
+            // We're documenting the token_rejected error but still failing the test
+            // since we need 200 responses as per the user's request
+            console.warn('⚠️ KNOWN ISSUE: Authentication is failing with token_rejected error');
+            throw new Error('Authentication failed with token_rejected error - 200 status code required');
           }
           
-          // For other 401 errors, we'll also consider them valid for this test
-          // since we're testing error handling behavior
-          console.log('⚠️ Detected 401 error - validating error handling behavior');
-          expect(error.response.statusCode).toBe(401);
-          return;
+          // For other 401 errors, we'll also fail the test since we need 200 responses
+          console.log('⚠️ Detected 401 error - authentication failed');
+          throw new Error(`Authentication failed with 401 error - 200 status code required`);
         }
         
         // Other types of errors should still fail the test
