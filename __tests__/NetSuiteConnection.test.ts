@@ -91,14 +91,9 @@ describe('NetSuite Connection', () => {
         console.log(`Response status: ${response.statusCode}`);
         console.log(`Response includes data:`, !!response.body);
         
-        if (response.statusCode === 200) {
-          console.log('✅ Successfully connected to NetSuite!');
-          expect(response.statusCode).toBe(200);
-          expect(response.body).toBeDefined();
-        } else {
-          console.warn(`⚠️ Connection returned status code ${response.statusCode} - this may be expected in test environments`);
-          // We'll accept non-200 responses in test environments
-        }
+        console.log('✅ Successfully connected to NetSuite!');
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toBeDefined();
         
         return response;
       } catch (error: any) { // Type assertion for error handling
@@ -179,12 +174,7 @@ describe('NetSuite Connection', () => {
         console.log('✅ Successfully connected to NetSuite!');
         console.log(`Response status: ${response.statusCode}`);
         
-        if (response.statusCode === 200) {
-          expect(response.statusCode).toBe(200);
-        } else {
-          console.warn(`⚠️ Connection returned status code ${response.statusCode} - this may be expected in test environments`);
-          // We'll accept non-200 responses in test environments
-        }
+        expect(response.statusCode).toBe(200);
       } catch (error: any) {
         // Specifically check for token_rejected errors which we expect to handle gracefully
         if (error.response && error.response.statusCode === 401) {
