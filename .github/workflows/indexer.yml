@@ -1,0 +1,75 @@
+name: Codebase Index Generator
+
+on:
+  # Trigger on branch creation
+  create:
+    branches:
+      - '**'
+  
+  # Trigger on pull request events (including merges)
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [ main ]
+  
+  # Trigger on push to main branch
+  push:
+    branches: [ main ]
+
+jobs:
+  generate-index:
+    # Only run if it's a branch creation event or a PR merge or a push to main
+    if: |
+      (github.event_name == 'create' && github.event.ref_type == 'branch') ||
+      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Set branch name
+        run: |
+          if [[ "${{ github.event_name }}" == "create" ]]; then
+            echo "CI_BRANCH=${{ github.event.ref }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "CI_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
+          else
+            echo "CI_BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          fi
+      
+      - name: Generate codebase index
+        run: |
+          pnpm codebase-index
+          
+      - name: Commit and push changes if needed
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update codebase index [skip ci]"
+          file_pattern: docs/codebase-index.json
