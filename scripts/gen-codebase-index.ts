@@ -45,6 +45,8 @@ interface CodebaseIndex {
   mode: string;
   sourceBranch: string; // New field for tracking source branch
   indexBuildId?: string; // Optional UUID for v4+ preparation
+  packageManager?: string; // New field for package manager detection
+  testingFramework?: string; // New field for testing framework detection
   entries: IndexEntry[];
 }
 
@@ -395,6 +397,8 @@ const determineLanguage = (filePath: string): string => {
     '.html': 'HTML'
   };
   return languageMap[ext] || 'Unknown';
+
+
 };
 
 // Extract environment variables from TypeScript/JavaScript files
@@ -517,6 +521,8 @@ const extractEnvironmentVariables = (filePath: string): EnvVariable[] => {
     console.error(`Error extracting environment variables from ${filePath}:`, error);
     return [];
   }
+
+
 };
 
 // Normalize dependencies to remove duplicates and standardize paths
@@ -567,6 +573,44 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
 // Main function
 (async () => {
   try {
+    // Detect package manager from lock files
+    const detectPackageManager = (): string | undefined => {
+      try {
+        // Check for pnpm-lock.yaml first (highest priority)
+        if (fs.existsSync('pnpm-lock.yaml')) {
+          return 'pnpm';
+        }
+        // Check for yarn.lock second
+        if (fs.existsSync('yarn.lock')) {
+          return 'yarn';
+        }
+        // Check for package-lock.json last
+        if (fs.existsSync('package-lock.json')) {
+          return 'npm';
+        }
+        // Return undefined if no lock file is found
+        return undefined;
+      } catch (error) {
+        console.error('[codebase-index] Error detecting package manager:', error);
+        return undefined;
+      }
+    };
+
+    // Detect testing framework
+    const detectTestingFramework = (): string | undefined => {
+      try {
+        // Check for Jest configuration
+        if (fs.existsSync('jest.config.js') || fs.existsSync('jest.config.ts')) {
+          return 'Jest';
+        }
+        // Add checks for other testing frameworks if needed in the future
+        return undefined;
+      } catch (error) {
+        console.error('[codebase-index] Error detecting testing framework:', error);
+        return undefined;
+      }
+    };
+    
     // Find all matching files
     const files = await glob(['**/*.{ts,js,json,md}'], { 
       ignore: IGNORE,
@@ -848,6 +892,8 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       mode,
       sourceBranch, // Add the source branch to the header
       indexBuildId: generateUUID(), // Add UUID for indexBuildId
+      packageManager: detectPackageManager(), // Add package manager detection
+      testingFramework: detectTestingFramework(), // Add testing framework detection
       entries: sortedIndex
     };
 
