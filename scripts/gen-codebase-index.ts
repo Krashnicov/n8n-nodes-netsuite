@@ -3,6 +3,7 @@ import path from 'path';
 import ts from 'typescript';
 import glob from 'fast-glob';
 import crypto from 'crypto';
+import { execSync } from 'child_process';
 
 // Constants
 const INDEX_PATH = path.resolve('docs/codebase-index.json');
@@ -42,6 +43,7 @@ interface CodebaseIndex {
   generatedBy: string;
   ciRunId: string;
   mode: string;
+  sourceBranch: string; // New field for tracking source branch
   indexBuildId?: string; // Optional UUID for v4+ preparation
   entries: IndexEntry[];
 }
@@ -659,6 +661,28 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       ? modeArg.split('=')[1] 
       : (process.env.CI ? 'ci' : 'manual');
     
+    // Get source branch from command line, environment variable, or default
+    const sourceBranchArg = process.argv.find(arg => arg.startsWith('--source-branch='));
+    let sourceBranch = sourceBranchArg 
+      ? sourceBranchArg.split('=')[1] 
+      : (process.env.CI_BRANCH || process.env.BRANCH_NAME);
+    
+    // If no branch specified from args or env, try to get from git command
+    if (!sourceBranch) {
+      try {
+        const branchBuffer = execSync('git branch --show-current', { encoding: 'utf8' });
+        sourceBranch = branchBuffer.toString().trim();
+      } catch (err) {
+        console.warn('[codebase-index] Warning: Could not get current branch from git:', err);
+        sourceBranch = 'main'; // Default to main if git command fails
+      }
+    }
+    
+    // Use main as fallback if all else fails
+    if (!sourceBranch) {
+      sourceBranch = 'main';
+    }
+    
     // Second pass: populate usedIn arrays by cross-referencing dependencies
     const entries = Array.from(fileMap.values());
     
@@ -822,6 +846,7 @@ const normalizeDependencies = (dependencies: string[], currentFilePath: string):
       generatedBy: "codebase-index@1.4.0", // Updated to match indexVersion
       ciRunId,
       mode,
+      sourceBranch, // Add the source branch to the header
       indexBuildId: generateUUID(), // Add UUID for indexBuildId
       entries: sortedIndex
     };
