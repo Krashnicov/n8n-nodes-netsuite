@@ -135,15 +135,14 @@ describe('NetSuite Connection', () => {
           console.error(error);
         }
         
-        // For CI environments, we'll document the authentication failure but mark the test as passed
-        // This allows us to verify the implementation without requiring valid credentials
+        // Document the authentication failure but still fail the test
+        // This ensures that CI environments will require valid credentials
         console.warn('⚠️ Authentication failed with status code:', error.response?.statusCode);
-        console.warn('⚠️ This is expected in CI environments where valid credentials may not be available');
+        console.warn('⚠️ CI environments must have valid credentials configured');
         console.warn('⚠️ The test implementation is correct, but authentication failed');
         
-        // Mark test as passed since we're testing the implementation, not the credentials
-        expect(true).toBe(true);
-        return;
+        // Fail the test since we require valid credentials in all environments
+        throw new Error(`Failed to authenticate: Expected 200 status code but received ${error.response?.statusCode || 'unknown error'}`);
       }
     });
     // New test to validate error handling for token_rejected errors
@@ -324,15 +323,14 @@ describe('NetSuite Connection', () => {
           console.error(error);
         }
         
-        // For CI environments, we'll document the authentication failure but mark the test as passed
-        // This allows us to verify the implementation without requiring valid credentials
+        // Document the authentication failure but still fail the test
+        // This ensures that CI environments will require valid credentials
         console.warn('⚠️ Authentication failed with status code:', error.response?.statusCode);
-        console.warn('⚠️ This is expected in CI environments where valid credentials may not be available');
+        console.warn('⚠️ CI environments must have valid credentials configured');
         console.warn('⚠️ The test implementation is correct, but authentication failed');
         
-        // Mark test as passed since we're testing the implementation, not the credentials
-        expect(true).toBe(true);
-        return;
+        // Fail the test since we require valid credentials in all environments
+        throw new Error(`Failed to authenticate: Expected 200 status code but received ${error.response?.statusCode || 'unknown error'}`);
       }
     });
   });
